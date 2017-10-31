@@ -1,4 +1,6 @@
 module Main where
 
+import Doromochi.Main (defaultMain)
+
 main :: IO ()
-main = putStrLn "Hello, Eta!"
+main = defaultMain
