@@ -2,7 +2,6 @@ module JavaFX.Core
   ( javafx
   ) where
 
-import Data.Proxy (Proxy(..))
 import Java
 import JavaFX.Methods (launch)
 import System.Environment (getJavaArgs)
