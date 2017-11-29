@@ -1,19 +1,6 @@
 {-# LANGUAGE FlexibleContexts #-}
 
-module JavaFX.Methods
-  ( newScene
-  , newCircle
-  , newGroup
-  , launch
-  , getChildren
-  , addChild
-  , showStage
-  , setTitle
-  , setScene
-  , action
-  , newButton
-  , setOnAction
-  ) where
+module JavaFX.Methods where
 
 import Java
 import JavaFX.Types
@@ -58,3 +45,15 @@ foreign import java unsafe "setOnAction"
 
 setOnAction :: (ActionEvent -> Java (EventHandler ActionEvent) ()) -> Java Button ()
 setOnAction = setOnAction' . action
+
+foreign import java unsafe "@new"
+  newImageView :: Image -> Java a ImageView
+
+foreign import java unsafe "setFitHeight"
+  setFitHeight :: Double -> Java ImageView ()
+
+foreign import java unsafe "setFitWidth"
+  setFitWidth :: Double -> Java ImageView ()
+
+foreign import java unsafe "@new"
+  newImage :: FilePath -> Java a Image

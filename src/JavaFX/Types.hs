@@ -1,76 +1,73 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE MagicHash #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies #-}
 
-module JavaFX.Types
-  ( Application (..)
-  , Group (..)
-  , Scene (..)
-  , Circle (..)
-  , Stage (..)
-  , Parent (..)
-  , Node (..)
-  , Shape (..)
-  , Button (..)
-  , ObservableList (..)
-  , Event (..)
-  , ActionEvent (..)
-  , EventHandler (..)
-  ) where
+module JavaFX.Types where
 
 import Java
 
-data {-# CLASS "javafx.application.Application" #-} Application
-  = Application (Object# Application)
+data {-# CLASS "javafx.application.Application" #-}
+  Application = Application (Object# Application)
   deriving (Class)
 
-data {-# CLASS "javafx.scene.Group" #-} Group
-  = Group (Object# Group)
+data {-# CLASS "javafx.scene.Group" #-}
+  Group = Group (Object# Group)
   deriving (Class)
 
-data {-# CLASS "javafx.scene.Scene" #-} Scene
-  = Scene (Object# Scene)
+data {-# CLASS "javafx.scene.Scene" #-}
+  Scene = Scene (Object# Scene)
   deriving (Class)
 
-data {-# CLASS "javafx.scene.shape.Circle" #-} Circle
-  = Circle (Object# Circle)
+data {-# CLASS "javafx.scene.shape.Circle" #-}
+  Circle = Circle (Object# Circle)
   deriving (Class)
 
-data {-# CLASS "javafx.stage.Stage" #-} Stage
-  = Stage (Object# Stage)
+data {-# CLASS "javafx.stage.Stage" #-}
+  Stage = Stage (Object# Stage)
   deriving (Class)
 
-data {-# CLASS "javafx.scene.Parent" #-} Parent
-  = Parent (Object# Parent)
+data {-# CLASS "javafx.scene.Parent" #-}
+  Parent = Parent (Object# Parent)
   deriving (Class)
 
-data {-# CLASS "javafx.scene.Node" #-} Node
-  = Node (Object# Node)
+data {-# CLASS "javafx.scene.Node" #-}
+  Node = Node (Object# Node)
   deriving (Class)
 
-data {-# CLASS "javafx.scene.shape.Shape" #-} Shape
-  = Shape (Object# Shape)
+data {-# CLASS "javafx.scene.shape.Shape" #-}
+  Shape = Shape (Object# Shape)
   deriving (Class)
 
-data {-# CLASS "javafx.scene.control.Button" #-} Button
-  = Button (Object# Button)
+data {-# CLASS "javafx.scene.control.Button" #-}
+  Button = Button (Object# Button)
   deriving (Class)
 
-data {-# CLASS "javafx.collections.ObservableList" #-} ObservableList
-  = ObservableList (Object# ObservableList)
+data {-# CLASS "javafx.collections.ObservableList" #-}
+  ObservableList = ObservableList (Object# ObservableList)
   deriving (Class)
 
-data {-# CLASS "javafx.event.Event" #-} Event
-  = Event (Object# Event)
+data {-# CLASS "javafx.event.Event" #-}
+  Event = Event (Object# Event)
   deriving (Class)
 
-data {-# CLASS "javafx.event.ActionEvent" #-} ActionEvent
-  = ActionEvent (Object# ActionEvent)
+data {-# CLASS "javafx.event.ActionEvent" #-}
+  ActionEvent = ActionEvent (Object# ActionEvent)
   deriving (Class)
 
-data {-# CLASS "javafx.event.EventHandler" #-} EventHandler a
-  = EventHandler (Object# (EventHandler a))
+data {-# CLASS "javafx.event.EventHandler" #-}
+  EventHandler a = EventHandler (Object# (EventHandler a))
+  deriving (Class)
+
+data {-# CLASS "javafx.scene.image.ImageView" #-}
+  ImageView = ImageView (Object# ImageView)
+  deriving (Class)
+
+data {-# CLASS "javafx.scene.image.Image" #-}
+  Image = Image (Object# Image)
+  deriving (Class)
+
+data {-# CLASS "javafx.scene.control.MenuBar" #-}
+  MenuBar = MenuBar (Object# MenuBar)
   deriving (Class)
 
 type instance Inherits Group       = '[Parent]
