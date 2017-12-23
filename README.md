@@ -32,7 +32,7 @@ $ doromochi
 
 
 # :clipboard: About the guide line and the copyright :clipboard:
-[This app's images](https://github.com/aiya000/eta-doromochi/blob/master/LICENSE) is in the
+[This app's images](https://github.com/aiya000/eta-doromochi/blob/master/images) is in the
 [（ず・ω・きょ）](http://zunko.jp/guideline.html ).
 
 ![（ず・ω・きょ）](http://zunko.jp/sozai/FAQ/zunkyo_m.png)
