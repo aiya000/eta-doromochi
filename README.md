@@ -20,17 +20,18 @@ $ doromochi
 # :grey_exclamation: Requirements :grey_exclamation:
 
 - [eta (etlas)](http://eta-lang.org/)
+    - version: 0.0.9b3
 - [JavaFX 8](https://docs.oracle.com/javase/jp/8/javafx/api/toc.htm)
     - `yaourt -S java-openjfx` (ArchLinux)
 
 
-# Support
+# :wrench: Support :wrench:
 
 - Linux
 - macOS
 
 
-# About the guide line and the copyright
+# :clipboard: About the guide line and the copyright :clipboard:
 [This app's images](https://github.com/aiya000/eta-doromochi/blob/master/LICENSE) is in the
 [（ず・ω・きょ）](http://zunko.jp/guideline.html ).
 
@@ -40,7 +41,4 @@ Also [\@HassakuTb](https://twitter.com/HassakuTb) has the copyright of the image
 
 ![zunko](https://github.com/aiya000/eta-doromochi/blob/master/images/work_finishes.png)
 
-
-# Note
-JavaFX module is copied from [eta-examples](https://github.com/typelead/eta-examples/tree/d86428a6498c791a02d0777432e27ef1be7a6ff7/2-javafx),
-this is under the Apache-2.0 license.
+Also the whole of this software includes the work that is distributed in the Apache License 2.0 + ずんきょ.
