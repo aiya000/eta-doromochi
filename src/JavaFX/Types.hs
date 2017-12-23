@@ -1,77 +1,179 @@
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MagicHash #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE TypeFamilies #-}
 
 module JavaFX.Types where
 
 import Java
+import Java.Utils
 
-data {-# CLASS "javafx.application.Application" #-}
-  Application = Application (Object# Application)
+data {-# CLASS "javafx.application.Application" #-} Application =
+  Application (Object# Application)
   deriving (Class)
 
-data {-# CLASS "javafx.scene.Group" #-}
-  Group = Group (Object# Group)
+data {-# CLASS "javafx.scene.Group" #-} Group =
+  Group (Object# Group)
   deriving (Class)
 
-data {-# CLASS "javafx.scene.Scene" #-}
-  Scene = Scene (Object# Scene)
+type instance Inherits Group = '[Parent]
+
+data {-# CLASS "javafx.scene.Scene" #-} Scene =
+  Scene (Object# Scene)
   deriving (Class)
 
-data {-# CLASS "javafx.scene.shape.Circle" #-}
-  Circle = Circle (Object# Circle)
+data {-# CLASS "javafx.scene.shape.Circle" #-} Circle =
+  Circle (Object# Circle)
   deriving (Class)
 
-data {-# CLASS "javafx.stage.Stage" #-}
-  Stage = Stage (Object# Stage)
+type instance Inherits Circle = '[Shape]
+
+data {-# CLASS "javafx.stage.Stage" #-} Stage =
+  Stage (Object# Stage)
   deriving (Class)
 
-data {-# CLASS "javafx.scene.Parent" #-}
-  Parent = Parent (Object# Parent)
+data {-# CLASS "javafx.scene.Parent" #-} Parent =
+  Parent (Object# Parent)
   deriving (Class)
 
-data {-# CLASS "javafx.scene.Node" #-}
-  Node = Node (Object# Node)
+type instance Inherits Parent = '[Node]
+
+data {-# CLASS "javafx.scene.layout.Pane" #-} Pane =
+  Pane (Object# Pane)
   deriving (Class)
 
-data {-# CLASS "javafx.scene.shape.Shape" #-}
-  Shape = Shape (Object# Shape)
+type instance Inherits Pane = '[Region]
+
+data {-# CLASS "javafx.scene.layout.Region" #-} Region =
+  Region (Object# Region)
   deriving (Class)
 
-data {-# CLASS "javafx.scene.control.Button" #-}
-  Button = Button (Object# Button)
+type instance Inherits Region = '[Parent]
+
+data {-# CLASS "javafx.scene.layout.StackPane" #-} StackPane =
+  StackPane (Object# StackPane)
   deriving (Class)
 
-data {-# CLASS "javafx.collections.ObservableList" #-}
-  ObservableList = ObservableList (Object# ObservableList)
+type instance Inherits StackPane = '[Pane]
+
+data {-# CLASS "javafx.geometry.Pos" #-} Pos =
+  Pos (Object# Pos)
   deriving (Class)
 
-data {-# CLASS "javafx.event.Event" #-}
-  Event = Event (Object# Event)
+type instance Inherits Pos = '[Enum Pos]
+
+data {-# CLASS "javafx.scene.layout.BorderPane" #-} BorderPane =
+  BorderPane (Object# BorderPane)
   deriving (Class)
 
-data {-# CLASS "javafx.event.ActionEvent" #-}
-  ActionEvent = ActionEvent (Object# ActionEvent)
+type instance Inherits BorderPane = '[Pane]
+
+data {-# CLASS "javafx.scene.Node" #-} Node =
+  Node (Object# Node)
   deriving (Class)
 
-data {-# CLASS "javafx.event.EventHandler" #-}
-  EventHandler a = EventHandler (Object# (EventHandler a))
+data {-# CLASS "javafx.scene.Node[]" #-} JNodeArray =
+  JNodeArray (Object# JNodeArray)
   deriving (Class)
 
-data {-# CLASS "javafx.scene.image.ImageView" #-}
-  ImageView = ImageView (Object# ImageView)
+instance JArray Node JNodeArray
+
+data {-# CLASS "javafx.scene.shape.Shape" #-} Shape =
+  Shape (Object# Shape)
   deriving (Class)
 
-data {-# CLASS "javafx.scene.image.Image" #-}
-  Image = Image (Object# Image)
+type instance Inherits Shape = '[Node]
+
+data {-# CLASS "javafx.scene.control.Button" #-} Button =
+  Button (Object# Button)
   deriving (Class)
 
-data {-# CLASS "javafx.scene.control.MenuBar" #-}
-  MenuBar = MenuBar (Object# MenuBar)
+data {-# CLASS "javafx.collections.ObservableList" #-} ObservableList a =
+  ObservableList (Object# (ObservableList a))
   deriving (Class)
 
-type instance Inherits Group       = '[Parent]
-type instance Inherits Parent      = '[Node]
-type instance Inherits Shape       = '[Node]
-type instance Inherits Circle      = '[Shape]
+type instance Inherits (ObservableList a) = '[List a, Observable]
+
+data {-# CLASS "javafx.beans.Observable" #-} Observable =
+  Observable (Object# Observable)
+  deriving (Class)
+
+data {-# CLASS "javafx.event.Event" #-} Event =
+  Event (Object# Event)
+  deriving (Class)
+
+data {-# CLASS "javafx.event.ActionEvent" #-} ActionEvent =
+  ActionEvent (Object# ActionEvent)
+  deriving (Class)
+
 type instance Inherits ActionEvent = '[Event]
+
+data {-# CLASS "javafx.event.EventHandler" #-} EventHandler a =
+  EventHandler (Object# (EventHandler a))
+  deriving (Class)
+
+data {-# CLASS "javafx.event.EventType" #-} EventType =
+  EventType (Object# EventType)
+  deriving (Class)
+
+data {-# CLASS "javafx.scene.image.ImageView" #-} ImageView =
+  ImageView (Object# ImageView)
+  deriving (Class)
+
+data {-# CLASS "javafx.scene.image.Image" #-} Image =
+  Image (Object# Image)
+  deriving (Class)
+
+data {-# CLASS "javafx.scene.control.MenuBar" #-} MenuBar =
+  MenuBar (Object# MenuBar)
+  deriving (Class)
+
+type instance Inherits MenuBar = '[Control]
+
+data {-# CLASS "javafx.scene.control.Control" #-} Control =
+  Control (Object# Control)
+  deriving (Class)
+
+type instance Inherits Control = '[Region]
+
+data {-# CLASS "javafx.scene.control.Menu" #-} Menu =
+  Menu (Object# Menu)
+  deriving (Class)
+
+type instance Inherits Menu = '[MenuItem]
+
+data {-# CLASS "javafx.scene.control.MenuItem" #-} MenuItem =
+  MenuItem (Object# MenuItem)
+  deriving (Class)
+
+data {-# CLASS "javafx.scene.text.Text" #-} Text =
+  Text (Object# Text)
+  deriving (Class)
+
+type instance Inherits Text = '[Shape]
+
+data {-# CLASS "javafx.scene.text.Font" #-} Font =
+  Font (Object# Font)
+  deriving (Class)
+
+data {-# CLASS "javafx.fxml.FXMLLoader" #-} FXMLLoader =
+  FXMLLoader (Object# FXMLLoader)
+  deriving (Class)
+
+data {-# CLASS "javafx.scene.control.Label" #-} Label =
+  Label (Object# Label)
+  deriving (Class)
+
+data {-# CLASS "javafx.scene.layout.FlowPane" #-} FlowPane =
+  FlowPane (Object# FlowPane)
+  deriving (Class)
+
+type instance Inherits FlowPane = '[Pane]
+
+data {-# CLASS "javafx.geometry.Orientation" #-} Orientation =
+  Orientation (Object# Orientation)
+  deriving (Class)
+
+type instance Inherits Orientation = '[Enum Orientation]
