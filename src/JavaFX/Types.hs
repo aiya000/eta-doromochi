@@ -126,6 +126,8 @@ data {-# CLASS "javafx.scene.image.ImageView" #-} ImageView =
   ImageView (Object# ImageView)
   deriving (Class)
 
+type instance Inherits ImageView = '[Node]
+
 data {-# CLASS "javafx.scene.image.Image" #-} Image =
   Image (Object# Image)
   deriving (Class)

@@ -1,8 +1,6 @@
 -- | Present 'LicensePane' by 'newLicensePane'
 module Doromochi.View.LicensePane where
 
-import Control.Monad (forM_)
-import Doromochi.Types (DoromochiApp(..))
 import Java
 import JavaFX
 
@@ -15,7 +13,7 @@ type LicensePane = FlowPane
 
 --TODO: Improve appearance
 -- | Make a view of 'LicensePane'
-newLicensePane :: DoromochiApp -> Java a LicensePane
+newLicensePane :: Application -> Java a LicensePane
 newLicensePane app = do
   doromochi <- newLabel "ドロもち"
   imageAuthor <- newLabel "The copyright for the zunko images in this software is owned by @HassakuTb on （ず・ω・きょ）"
@@ -28,30 +26,25 @@ newLicensePane app = do
   emptyLine <- newLabel ""
   etaExamples <- newLabel "typelead/eta-examples"
   etaExamplesLink <- newHyperlinkWithOpening app "https://github.com/typelead/eta-examples"
-  self <- newFlowPane
-  self <.> setOrientation verticalOrient
-  let nodes = [ superCast doromochi
-              , superCast imageAuthor
-              , superCast imageLink
-              , superCast hassakuLink
-              , superCast zunkyoLink
-              , superCast bar
-              , superCast aboutLicense
-              , superCast thisAppDepends
-              , superCast emptyLine
-              , superCast etaExamples
-              , superCast etaExamplesLink
-              ]
-  forM_ (nodes :: [Node]) $ \node ->
-    self <.> getChildren >- addChild node
-  return self
+  newFlowPane verticalOrient [ superCast doromochi
+                             , superCast imageAuthor
+                             , superCast imageLink
+                             , superCast hassakuLink
+                             , superCast zunkyoLink
+                             , superCast bar
+                             , superCast aboutLicense
+                             , superCast thisAppDepends
+                             , superCast emptyLine
+                             , superCast etaExamples
+                             , superCast etaExamplesLink
+                             ]
   where
-    newHyperlinkWithOpening :: DoromochiApp -> String -> Java a Hyperlink
+    newHyperlinkWithOpening :: Application -> String -> Java a Hyperlink
     newHyperlinkWithOpening app urlLike = do
       x <- newHyperlink urlLike
       x <.> setOnButtonAction (openURL urlLike app)
       return x
 
     --TODO: OpenJDK8 + OpenJFX on my ArchLinux occures 'java.lang.ClassNotFoundException: com.sun.deploy.uitoolkit.impl.fx.HostServicesFactory', please see https://bugs.openjdk.java.net/browse/JDK-8160464
-    openURL :: String -> DoromochiApp -> (ActionEvent -> Java (EventHandler ActionEvent) ())
-    openURL urlLike app = \_ -> superCast app <.>  getHostServices >- showDocument urlLike
+    openURL :: String -> Application -> (ActionEvent -> Java (EventHandler ActionEvent) ())
+    openURL urlLike app = \_ -> app <.> getHostServices >- showDocument urlLike

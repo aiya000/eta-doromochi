@@ -4,6 +4,7 @@
 
 module JavaFX.Methods where
 
+import Control.Monad (forM_)
 import Java
 import Java.Doromochi
 import JavaFX.Types
@@ -153,6 +154,15 @@ foreign import java unsafe "setFont" setFont ::
 foreign import java unsafe "@static javafx.fxml.FXMLLoader.load" fXMLLoad ::
   Extends c Object => URL -> Java a c
 
+foreign import java unsafe "@new" newBorderPane ::
+  (Extends a Node, Extends b Node, Extends c Node, Extends d Node, Extends e Node)
+  => Maybe a -- ^ center
+  -> Maybe b -- ^ top
+  -> Maybe c -- ^ right
+  -> Maybe d -- ^ bottom
+  -> Maybe e -- ^ left
+  -> Java f BorderPane
+
 foreign import java unsafe "getTop" getTop ::
   Java BorderPane Node
 
@@ -174,8 +184,20 @@ foreign import java unsafe "getImage" getImage ::
 foreign import java unsafe "@new" newLabel ::
   String -> Java a Label
 
-foreign import java unsafe "@new" newFlowPane ::
+foreign import java unsafe "@new" newFlowPane' ::
   Java a FlowPane
+
+--FIXME: Why eta occurs the exception when below 'newFlowPane' is called as `FlowPane(Orientation o, Node... nodes)` constructor ?
+--       Caused by: java.lang.ClassCastException: doromochi.javafx.types.datacons.Node cannot be cast to ghc_prim.ghc.types.datacons.Czh
+--foreign import java unsafe "@new" newFlowPane ::
+--  Orientation -> [Node] -> Java a FlowPane
+newFlowPane :: Orientation -> [Node] -> Java a FlowPane
+newFlowPane x nodes = do
+  self <- newFlowPane'
+  self <.> setOrientation x
+  forM_ nodes $ \node ->
+    self <.> getChildren >- addChild node
+  return self
 
 foreign import java unsafe "setOrientation" setOrientation ::
   Orientation -> Java FlowPane ()

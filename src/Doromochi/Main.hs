@@ -4,7 +4,7 @@ module Doromochi.Main
   ( defaultMain
   ) where
 
-import Doromochi.Types (DoromochiApp)
+import Doromochi.DoromochiApp (DoromochiApp)
 import Java (Proxy(..))
 import JavaFX (javafx)
 
