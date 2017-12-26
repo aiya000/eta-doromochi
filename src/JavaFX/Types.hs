@@ -14,6 +14,10 @@ data {-# CLASS "javafx.application.Application" #-} Application =
   Application (Object# Application)
   deriving (Class)
 
+data {-# CLASS "javafx.application.HostServices" #-} HostServices =
+  HostServices (Object# HostServices)
+  deriving (Class)
+
 data {-# CLASS "javafx.scene.Group" #-} Group =
   Group (Object# Group)
   deriving (Class)
@@ -166,6 +170,14 @@ data {-# CLASS "javafx.scene.control.Label" #-} Label =
   Label (Object# Label)
   deriving (Class)
 
+type instance Inherits Label = '[Labeled]
+
+data {-# CLASS "javafx.scene.control.Labeled" #-} Labeled =
+  Labeled (Object# Labeled)
+  deriving (Class)
+
+type instance Inherits Labeled = '[Control]
+
 data {-# CLASS "javafx.scene.layout.FlowPane" #-} FlowPane =
   FlowPane (Object# FlowPane)
   deriving (Class)
@@ -177,3 +189,15 @@ data {-# CLASS "javafx.geometry.Orientation" #-} Orientation =
   deriving (Class)
 
 type instance Inherits Orientation = '[Enum Orientation]
+
+data {-# CLASS "javafx.scene.control.Hyperlink" #-} Hyperlink =
+  Hyperlink (Object# Hyperlink)
+  deriving (Class)
+
+type instance Inherits Hyperlink = '[ButtonBase]
+
+data {-# CLASS "javafx.scene.control.ButtonBase" #-} ButtonBase =
+  ButtonBase (Object# ButtonBase)
+  deriving (Class)
+
+type instance Inherits ButtonBase = '[Labeled]

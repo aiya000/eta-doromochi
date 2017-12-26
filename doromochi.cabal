@@ -18,6 +18,7 @@ library
                      , safe-exceptions
   exposed-modules:     Doromochi.Main
                      , Doromochi.DoromochiApp
+                     , Doromochi.Types
                      , Java.Doromochi
                      , JavaFX
                      , JavaFX.Core

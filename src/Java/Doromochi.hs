@@ -32,3 +32,17 @@ data {-# CLASS "java.net.URL" #-} URL =
 
 foreign import java unsafe "getResource" getResource ::
   Class a => String -> Java (JClass a) URL
+
+
+data {-# CLASS "java.awt.Desktop" #-} Desktop =
+  Desktop (Object# Desktop)
+  deriving (Class)
+
+foreign import java unsafe "@static java.awt.Desktop.getDesktop" getDesktop ::
+  Java a Desktop
+
+foreign import java unsafe "browse" browse ::
+  URI -> Java Desktop ()
+
+foreign import java unsafe "open" open ::
+  File -> Java Desktop ()

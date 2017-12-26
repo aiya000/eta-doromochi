@@ -71,6 +71,12 @@ foreign import java unsafe "@new" newGroup ::
 foreign import java safe "@static javafx.application.Application.launch" launch ::
   JClass a -> JStringArray -> IO ()
 
+foreign import java unsafe "getHostServices" getHostServices ::
+  Java Application HostServices
+
+foreign import java unsafe "showDocument" showDocument ::
+  String -> Java HostServices ()
+
 foreign import java unsafe "getChildren" getChildren ::
   Extends c Parent => Java c (ObservableList a)
 
@@ -86,7 +92,7 @@ foreign import java unsafe "setTitle" setTitle ::
 foreign import java unsafe "setScene" setScene ::
   Scene -> Java Stage ()
 
-foreign import java unsafe "@wrapper handle" action ::
+foreign import java unsafe "@wrapper handle" handle ::
   Extends a Event => (a -> Java (EventHandler a) ()) -> EventHandler a
 
 foreign import java unsafe "@new" newEventType ::
@@ -96,10 +102,10 @@ foreign import java unsafe "@new" newButton ::
   String -> Java c Button
 
 foreign import java unsafe "setOnAction" setOnButtonAction' ::
-  EventHandler ActionEvent -> Java Button ()
+  Extends a ButtonBase => EventHandler ActionEvent -> Java a ()
 
-setOnButtonAction :: (ActionEvent -> Java (EventHandler ActionEvent) ()) -> Java Button ()
-setOnButtonAction = setOnButtonAction' . action
+setOnButtonAction :: Extends a ButtonBase => (ActionEvent -> Java (EventHandler ActionEvent) ()) -> Java a ()
+setOnButtonAction = setOnButtonAction' . handle
 
 foreign import java unsafe "@new" newImageView ::
   Image -> Java a ImageView
@@ -129,7 +135,7 @@ foreign import java unsafe "setOnAction" setOnMenuItemAction' ::
   EventHandler ActionEvent -> Java MenuItem ()
 
 setOnMenuItemAction :: (ActionEvent -> Java (EventHandler ActionEvent) ()) -> Java MenuItem ()
-setOnMenuItemAction = setOnMenuItemAction' . action
+setOnMenuItemAction = setOnMenuItemAction' . handle
 
 foreign import java unsafe "getMenus" getMenus ::
   Java MenuBar (ObservableList Menu)
@@ -179,3 +185,6 @@ foreign import java unsafe "@static @field javafx.geometry.Orientation.VERTICAL"
 
 foreign import java unsafe "@static @field javafx.geometry.Orientation.HORIZONTAL" horizontalOrient ::
   Orientation
+
+foreign import java unsafe "@new" newHyperlink ::
+  String -> Java a Hyperlink
