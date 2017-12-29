@@ -8,6 +8,7 @@ module Doromochi.DoromochiApp
   ) where
 
 import Doromochi.DoromochiPane (newDoromochiPane)
+import Doromochi.JavaFX
 import Java
 import JavaFX
 
@@ -26,7 +27,7 @@ foreign export java "start" start ::
 start :: Stage -> Java DoromochiApp ()
 start stage = do
   stage <.> setTitle "ドロもち"
-  doromochiPane <- withThis $ flip newDoromochiPane stage . superCast
+  doromochiPane <- withThis $ runJavaFX newDoromochiPane . AppCore stage . superCast
   scene <- newScene doromochiPane 512 512
   stage <.> do
     setTitle "ドロもち"

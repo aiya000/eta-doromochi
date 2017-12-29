@@ -15,9 +15,11 @@ library
   hs-source-dirs:      src
   ghc-options:         -Wall -fno-warn-name-shadowing -fno-warn-unused-do-bind -fno-warn-orphans -fno-warn-type-defaults -fprint-explicit-kinds
   build-depends:       base >=4.8 && < 4.9
+                     , mtl
                      , safe-exceptions
   exposed-modules:     Doromochi.Main
                      , Doromochi.DoromochiApp
+                     , Doromochi.JavaFX
                      , Java.Doromochi
                      , JavaFX
                      , JavaFX.Core

@@ -3,6 +3,8 @@ module Doromochi.DoromochiPane
   , newDoromochiPane
   ) where
 
+import Control.Monad.Reader (ask)
+import Doromochi.JavaFX (JavaFX, liftJ, AppCore(..))
 import Doromochi.View.LicensePane (newLicensePane)
 import Java
 import Java.Doromochi
@@ -16,31 +18,33 @@ type DoromochiPane = BorderPane
 --TODO: ^ Use newtype or data
 
 
---TODO: Use 'StateT' for passing 'Application' and 'Stage'
 -- | Make a 'DoromochiPane'
-newDoromochiPane :: Application -> Stage -> Java a DoromochiPane
-newDoromochiPane app stage = do
-  menuBar <- makeMenuBar app stage
-  imageView <- makeRestTimeImageView
-  contents <- newFlowPane verticalOrient [ superCast menuBar
-                                         , superCast imageView
-                                         ]
-  newBorderPane (Just contents) (Just menuBar) nil nil nil
+newDoromochiPane :: JavaFX a DoromochiPane
+newDoromochiPane = do
+  menuBar <- makeMenuBar
+  liftJ $ do
+    imageView <- makeRestTimeImageView
+    contents <- newFlowPane verticalOrient [ superCast menuBar
+                                           , superCast imageView
+                                           ]
+    newBorderPane (Just contents) (Just menuBar) nil nil nil
   where
     nil :: Maybe Node
     nil = Nothing
 
 
 -- | Make a menu bar for 'DoromochiPane'
-makeMenuBar :: Application -> Stage -> Java a MenuBar
-makeMenuBar app stage = do
-  menuBar <- newMenuBar
-  licenseMenu <- newMenu "Library"
-  licenseItem <- newMenuItem "License"
-  licenseItem <.> setOnMenuItemAction (intentToLicensePane app stage)
-  licenseMenu <.> getMenuItems >- addChild licenseItem
-  menuBar <.> getMenus >- addChild licenseMenu
-  return menuBar
+makeMenuBar :: JavaFX a MenuBar
+makeMenuBar = do
+  AppCore stage app <- ask
+  liftJ $ do
+    menuBar <- newMenuBar
+    licenseMenu <- newMenu "Library"
+    licenseItem <- newMenuItem "License"
+    licenseItem <.> setOnMenuItemAction (intentToLicensePane app stage)
+    licenseMenu <.> getMenuItems >- addChild licenseItem
+    menuBar <.> getMenus >- addChild licenseMenu
+    return menuBar
 
 
 -- | Make an intent action for 'DoromochiPane'
