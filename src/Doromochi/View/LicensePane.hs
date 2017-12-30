@@ -2,7 +2,7 @@
 module Doromochi.View.LicensePane where
 
 import Control.Monad.Reader (ask)
-import Doromochi.JavaFX (JavaFX, liftJ, AppCore(..))
+import Doromochi.Types (JavaFX, liftJ, AppCore(..))
 import Java
 import JavaFX
 

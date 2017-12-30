@@ -1,6 +1,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
-module Doromochi.JavaFX
+-- | Define doromochi specific types
+module Doromochi.Types
   ( AppCore (..)
   , JavaFX (..)
   , runJavaFX

@@ -8,7 +8,7 @@ module Doromochi.DoromochiApp
   ) where
 
 import Doromochi.View.DoromochiPane (newDoromochiPane)
-import Doromochi.JavaFX
+import Doromochi.Types
 import Java
 import JavaFX
 
