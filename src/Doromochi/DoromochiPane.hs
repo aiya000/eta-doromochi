@@ -36,23 +36,25 @@ newDoromochiPane = do
 -- | Make a menu bar for 'DoromochiPane'
 makeMenuBar :: JavaFX a MenuBar
 makeMenuBar = do
-  AppCore stage app <- ask
+  openLisenceApp <- makeOpenLisenceApp
   liftJ $ do
     menuBar <- newMenuBar
     licenseMenu <- newMenu "Library"
     licenseItem <- newMenuItem "License"
-    licenseItem <.> setOnMenuItemAction (intentToLicensePane app stage)
+    licenseItem <.> setOnMenuItemAction openLisenceApp
     licenseMenu <.> getMenuItems >- addChild licenseItem
     menuBar <.> getMenus >- addChild licenseMenu
     return menuBar
 
 
--- | Make an intent action for 'DoromochiPane'
-intentToLicensePane :: Application -> Stage -> (ActionEvent -> Java (EventHandler ActionEvent) ())
-intentToLicensePane app stage = \_ -> do
-  licensePane <- newLicensePane app
-  scene <- newSceneWithoutSize licensePane
-  stage <.> setScene scene
+-- | Make an action to open a new window for 'licensePane'
+makeOpenLisenceApp :: JavaFX a (ActionEvent -> Java (EventHandler ActionEvent) ())
+makeOpenLisenceApp = do
+  AppCore stage _ <- ask
+  licensePane <- newLicensePane
+  liftJ $ do
+    scene <- newSceneWithoutSize licensePane
+    return $ \_ -> stage <.> setScene scene
 
 
 -- | Make an image view with `~/.config/doromochi/images/rest_time.png` for 'DoromochiPane'
