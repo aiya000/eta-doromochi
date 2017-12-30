@@ -81,6 +81,7 @@ foreign import java unsafe "showDocument" showDocument ::
 foreign import java unsafe "getChildren" getChildren ::
   Extends c Parent => Java c (ObservableList a)
 
+--TODO: Generalize for `List a`
 foreign import java unsafe "@interface add" addChild ::
   Extends a Object => a -> Java (ObservableList a) Bool
 
