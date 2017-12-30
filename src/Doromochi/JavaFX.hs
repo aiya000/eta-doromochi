@@ -13,8 +13,8 @@ import JavaFX
 
 -- | These are needed in the javafx application
 data AppCore = AppCore
-  { primStage   :: Stage       -- ^ This is the only existing in this app
-  , application :: Application -- ^ This is the only existing too
+  { primStage :: Stage       -- ^ This is the only existing in this app
+  , fxApp     :: Application -- ^ This is the only existing too
   }
 
 -- | Store resources that depends the javafx application
