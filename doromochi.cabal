@@ -20,6 +20,8 @@ library
   exposed-modules:     Doromochi.Main
                      , Doromochi.DoromochiApp
                      , Doromochi.JavaFX
+                     , Doromochi.View.DoromochiPane
+                     , Doromochi.View.LicensePane
                      , Java.Doromochi
                      , JavaFX
                      , JavaFX.Core

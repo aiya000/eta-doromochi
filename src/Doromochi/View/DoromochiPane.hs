@@ -1,4 +1,4 @@
-module Doromochi.DoromochiPane
+module Doromochi.View.DoromochiPane
   ( DoromochiPane
   , newDoromochiPane
   ) where

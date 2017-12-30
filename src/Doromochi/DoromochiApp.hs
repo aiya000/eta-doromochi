@@ -7,7 +7,7 @@ module Doromochi.DoromochiApp
   , start
   ) where
 
-import Doromochi.DoromochiPane (newDoromochiPane)
+import Doromochi.View.DoromochiPane (newDoromochiPane)
 import Doromochi.JavaFX
 import Java
 import JavaFX
