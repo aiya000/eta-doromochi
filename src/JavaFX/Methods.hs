@@ -85,6 +85,9 @@ foreign import java unsafe "getChildren" getChildren ::
 foreign import java unsafe "@interface add" addChild ::
   Extends a Object => a -> Java (ObservableList a) Bool
 
+foreign import java unsafe "@new" newStage ::
+  Java a Stage
+
 foreign import java unsafe "show" showStage ::
   Java Stage ()
 

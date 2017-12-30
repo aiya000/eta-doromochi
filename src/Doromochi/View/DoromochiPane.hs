@@ -4,7 +4,7 @@ module Doromochi.View.DoromochiPane
   ) where
 
 import Control.Monad.Reader (asks)
-import Doromochi.JavaFX (JavaFX, liftJ, AppCore(..))
+import Doromochi.JavaFX (runJavaFX, JavaFX, liftJ, AppCore(..))
 import Doromochi.View.LicensePane (newLicensePane)
 import Java
 import Java.Doromochi
@@ -36,24 +36,26 @@ newDoromochiPane = do
 -- | Make a menu bar for 'DoromochiPane'
 makeMenuBar :: JavaFX a MenuBar
 makeMenuBar = do
-  openLisenceApp <- makeOpenLisenceApp
+  openLisenceWindow <- makeOpenLisenceWindow
   liftJ $ do
     menuBar <- newMenuBar
     licenseMenu <- newMenu "Library"
     licenseItem <- newMenuItem "License"
-    licenseItem <.> setOnMenuItemAction openLisenceApp
+    licenseItem <.> setOnMenuItemAction openLisenceWindow
     licenseMenu <.> getMenuItems >- addChild licenseItem
     menuBar <.> getMenus >- addChild licenseMenu
     return menuBar
   where
-    -- Make an action to open a new window for 'licensePane'
-    makeOpenLisenceApp :: JavaFX a (ActionEvent -> Java (EventHandler ActionEvent) ())
-    makeOpenLisenceApp = do
-      stage <- asks primStage
-      licensePane <- newLicensePane
-      liftJ $ do
+    -- Open a new window for 'LicensePane'
+    makeOpenLisenceWindow :: JavaFX a (ActionEvent -> Java (EventHandler ActionEvent) ())
+    makeOpenLisenceWindow = do
+      app <- asks fxApp
+      return $ \_ -> do
+        stage <- newStage
+        licensePane <- runJavaFX newLicensePane $ AppCore stage app
         scene <- newSceneWithoutSize licensePane
-        return $ \_ -> stage <.> setScene scene
+        stage <.> setScene scene
+        stage <.> showStage
 
 
 -- | Make an image view with `~/.config/doromochi/images/rest_time.png` for 'DoromochiPane'
