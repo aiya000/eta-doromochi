@@ -182,6 +182,21 @@ foreign import java unsafe "getBottom" getBottom ::
 foreign import java unsafe "getCenter" getCenter ::
   Java BorderPane Node
 
+foreign import java unsafe "setTop" setTop ::
+  Extends a Node => a -> Java BorderPane ()
+
+foreign import java unsafe "setLeft" setLeft ::
+  Extends a Node => a -> Java BorderPane ()
+
+foreign import java unsafe "setRight" setRight ::
+  Extends a Node => a -> Java BorderPane ()
+
+foreign import java unsafe "setBottom" setBottom ::
+  Extends a Node => a -> Java BorderPane ()
+
+foreign import java unsafe "setCenter" setCenter ::
+  Extends a Node => a -> Java BorderPane ()
+
 foreign import java unsafe "getImage" getImage ::
   Java ImageView Image
 

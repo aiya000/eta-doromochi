@@ -27,8 +27,10 @@ foreign export java "start" start ::
 start :: Stage -> Java DoromochiApp ()
 start stage = do
   stage <.> setTitle "ドロもち"
-  doromochiPane <- withThis $ runJavaFX newDoromochiPane . AppCore stage . superCast
-  scene <- newScene doromochiPane 512 512
+  --TODO: Create a pane or a window to make pomodoro prefs, Don't use `def :: PomodoroTimer`, Read prefs from the config
+  timer <- newDefaultTimer
+  doromochiPane <- withThis $ flip (runJavaFX newDoromochiPane) timer . AppCore stage . superCast
+  scene <- newScene doromochiPane 256 256
   stage <.> do
     setTitle "ドロもち"
     setScene scene

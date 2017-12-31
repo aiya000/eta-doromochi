@@ -94,6 +94,8 @@ data {-# CLASS "javafx.scene.control.Button" #-} Button =
   Button (Object# Button)
   deriving (Class)
 
+type instance Inherits Button = '[ButtonBase]
+
 data {-# CLASS "javafx.collections.ObservableList" #-} ObservableList a =
   ObservableList (Object# (ObservableList a))
   deriving (Class)

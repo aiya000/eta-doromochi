@@ -4,12 +4,11 @@ module Doromochi.View.DoromochiPane
   ) where
 
 import Control.Monad.Reader (asks)
-import Doromochi.Types (runJavaFX, JavaFX, liftJ, AppCore(..))
+import Doromochi.Types (runJavaFX, JavaFX, liftJ, AppCore(..), newDefaultTimer)
 import Doromochi.View.LicensePane (newLicensePane)
+import Doromochi.View.PomodoroPane (newPomodoroPane)
 import Java
-import Java.Doromochi
 import JavaFX
-import System.Environment (getEnv)
 
 -- |
 -- The primary (main) content of this app,
@@ -22,15 +21,20 @@ type DoromochiPane = BorderPane
 newDoromochiPane :: JavaFX a DoromochiPane
 newDoromochiPane = do
   menuBar <- makeMenuBar
-  liftJ $ do
-    imageView <- makeRestTimeImageView
-    contents <- newFlowPane verticalOrient [ superCast menuBar
-                                           , superCast imageView
-                                           ]
-    newBorderPane (Just contents) (Just menuBar) nil nil nil
+  startButton <- liftJ $ newButton "Start"
+  self <- liftJ $ newBorderPane (Just startButton) (Just menuBar) nil nil nil
+  intentToPomodoroPane <- makeIntentToPomodoroPane self
+  liftJ $ startButton <.> setOnButtonAction intentToPomodoroPane
+  --liftJ $ startButton <.> setOnButtonAction (intentToPomodoroPane >> startPomodoroCycle)
+  return self
   where
     nil :: Maybe Node
     nil = Nothing
+
+    makeIntentToPomodoroPane :: DoromochiPane -> JavaFX a (ActionEvent -> Java (EventHandler ActionEvent) ())
+    makeIntentToPomodoroPane doro = do
+      pomodoroPane <- newPomodoroPane
+      return $ \_ -> doro <.> setCenter pomodoroPane
 
 
 -- | Make a menu bar for 'DoromochiPane'
@@ -52,25 +56,8 @@ makeMenuBar = do
       app <- asks fxApp
       return $ \_ -> do
         stage <- newStage
-        licensePane <- runJavaFX newLicensePane $ AppCore stage app
+        emptyTimer <- newDefaultTimer
+        licensePane <- flip (runJavaFX newLicensePane) emptyTimer $ AppCore stage app
         scene <- newSceneWithoutSize licensePane
         stage <.> setScene scene
         stage <.> showStage
-
-
--- | Make an image view with `~/.config/doromochi/images/rest_time.png` for 'DoromochiPane'
-makeRestTimeImageView :: Java a ImageView
-makeRestTimeImageView = do
-  configDir <- io $ (++ "/.config/doromochi") <$> getEnv "HOME"
-  imageView <- newImageViewFrom $ configDir ++ "/images/rest_time.png"
-  imageView <.> setFitHeight 512
-  imageView <.> setFitWidth  512
-  return imageView
-  where
-    newImageViewFrom :: FilePath -> Java a ImageView
-    newImageViewFrom x =
-      newFile x >- toURI
-                >- toURL
-                >- withThis (return . fromJava . toString)
-                >>= newImage
-                >>= newImageView

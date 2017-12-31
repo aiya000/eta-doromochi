@@ -6,7 +6,7 @@ module Doromochi.Types
   ( AppCore (..)
   , PomodoroIntervals (..)
   , PomodoroTimer (..)
-  , newEmptyPomodoroTimer
+  , newDefaultTimer
   , RST
   , rst
   , runRST
@@ -21,8 +21,11 @@ import Control.Monad.RWS.Strict (RWST(..), evalRWST)
 import Control.Monad.Reader (MonadReader)
 import Control.Monad.State.Strict (MonadState)
 import Data.Default (Default(..))
+import Data.IORef (IORef, newIORef)
 import Java
 import JavaFX
+
+default (Int) 
 
 -- | A javafx application's resources
 data AppCore = AppCore
@@ -30,9 +33,7 @@ data AppCore = AppCore
   , fxApp     :: Application -- ^ This is the only existing too
   }
 
--- |
--- Your times of your pomodoro intervals,
--- 'PomodoroTimer' watches this.
+-- | Times of "pomodoro technic", 'PomodoroTimer' watches this
 data PomodoroIntervals = PomodoroIntervals
   { timeOnTask :: Delay -- ^ A time on a working
   , timeOnShortRest :: Delay -- ^ A rest time
@@ -47,15 +48,21 @@ instance Default PomodoroIntervals where
                           , timeOnLongRest = mDelay 30
                           }
 
--- | A state
+-- | A state on between `'JavaFX` a' and `'Java' a`, measures the pomodoro times
 data PomodoroTimer = PomodoroTimer
-  { pomodoroTimer :: Timer IO
-  , intervalPrefs :: PomodoroIntervals
+  { intervalPrefs :: PomodoroIntervals -- ^ Preferences of 'PomodoroIntervals'
+  , stopWatch :: IORef Int -- ^ A unique clock on `'JavaFX' a`, measure seconds with 'tickTimer'
+  , tickTimer :: Timer IO -- ^ Increment 'stopWatch' on a second after 'startPomodoroCycle' is executed
   }
 
--- | A timer, that does nothing
-newEmptyPomodoroTimer :: Java a PomodoroTimer
-newEmptyPomodoroTimer = flip PomodoroTimer def <$> io newTimer
+-- | A timer, that does nothing without 'startPomodoroCycle'
+newDefaultTimer :: Java a PomodoroTimer
+newDefaultTimer = PomodoroTimer def <$> io (newIORef 0) <*> io newTimer
+
+--TODO: Implement
+-- | Start a cycle of pomodoro technic with 'PomodoroTimer' of '`JavaFX` a'
+startPomodoroCycle :: JavaFX a ()
+startPomodoroCycle = undefined
 
 
 type RST r s m a = RWST r () s m a
