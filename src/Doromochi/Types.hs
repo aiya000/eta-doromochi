@@ -1,4 +1,5 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE TupleSections #-}
 
 -- | Define doromochi specific types
 module Doromochi.Types
@@ -6,6 +7,9 @@ module Doromochi.Types
   , PomodoroIntervals (..)
   , PomodoroTimer (..)
   , newEmptyPomodoroTimer
+  , RST
+  , rst
+  , runRST
   , JavaFX (..)
   , runJavaFX
   , liftJ
@@ -13,11 +17,14 @@ module Doromochi.Types
 
 import Control.Concurrent.Suspend (Delay, mDelay)
 import Control.Concurrent.Timer (Timer, newTimer)
+import Control.Monad.RWS.Strict (RWST(..), evalRWST)
+import Control.Monad.Reader (MonadReader)
+import Control.Monad.State.Strict (MonadState)
 import Data.Default (Default(..))
 import Java
 import JavaFX
 
--- | These are needed in the javafx application
+-- | A javafx application's resources
 data AppCore = AppCore
   { primStage :: Stage       -- ^ This is the only existing in this app
   , fxApp     :: Application -- ^ This is the only existing too
@@ -51,19 +58,36 @@ newEmptyPomodoroTimer :: Java a PomodoroTimer
 newEmptyPomodoroTimer = flip PomodoroTimer def <$> io newTimer
 
 
+type RST r s m a = RWST r () s m a
+
+--TODO: Remove `Monad m` restriction
+rst :: Monad m => (r -> s -> m (a, s)) -> RST r s m a
+rst f = RWST $ \r s -> do
+  (x, y) <- f r s
+  return (x, y, ())
+
+--TODO: Remove `Monad m` restriction
+runRST :: Monad m => RST r s m a -> r -> s -> m (a, s)
+runRST x r s = runRWST x r s >>= \(a, b, ()) -> return (a, b)
+
+
 -- | Store resources that depends the javafx application
 newtype JavaFX a b = JavaFX
-  { unJavaFX :: ReaderT AppCore (Java a) b
+  { unJavaFX :: RST AppCore PomodoroTimer (Java a) b
   } deriving ( Functor
              , Applicative
              , Monad
              , MonadReader AppCore
+             , MonadState PomodoroTimer
              )
 
 -- | Extract `'JavaFX' a`
-runJavaFX :: JavaFX a b -> AppCore -> Java a b
-runJavaFX context x = flip runReaderT x $ unJavaFX context
+runJavaFX :: JavaFX a b -> AppCore -> PomodoroTimer -> Java a b
+runJavaFX context r s = do
+  (x, _) <- evalRWST (unJavaFX context) r s
+  return x
 
 -- | Lift up a `'Java a'` as the `'JavaFX a'`
 liftJ :: Java a b -> JavaFX a b
-liftJ x = JavaFX . ReaderT $ const x
+liftJ x = let j = rst $ \_ timer -> (, timer) <$> x
+          in JavaFX j
