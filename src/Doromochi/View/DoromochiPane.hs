@@ -4,7 +4,8 @@ module Doromochi.View.DoromochiPane
   ) where
 
 import Control.Monad.Reader (asks)
-import Doromochi.Types (runJavaFX, JavaFX, liftJ, AppCore(..), newDefaultTimer)
+import Control.Monad.State.Strict (get)
+import Doromochi.Types (runJavaFX, JavaFX, liftJ, AppCore(..), newDefaultTimer, startClock)
 import Doromochi.View.LicensePane (newLicensePane)
 import Doromochi.View.PomodoroPane (newPomodoroPane)
 import Java
@@ -24,8 +25,8 @@ newDoromochiPane = do
   startButton <- liftJ $ newButton "Start"
   self <- liftJ $ newBorderPane (Just startButton) (Just menuBar) nil nil nil
   intentToPomodoroPane <- makeIntentToPomodoroPane self
-  liftJ $ startButton <.> setOnButtonAction intentToPomodoroPane
-  --liftJ $ startButton <.> setOnButtonAction (intentToPomodoroPane >> startPomodoroCycle)
+  startClock' <- makeStartClockEvent
+  liftJ $ startButton <.> setOnButtonAction (intentToPomodoroPane .>. startClock')
   return self
   where
     nil :: Maybe Node
@@ -34,7 +35,19 @@ newDoromochiPane = do
     makeIntentToPomodoroPane :: DoromochiPane -> JavaFX a (ActionEvent -> Java (EventHandler ActionEvent) ())
     makeIntentToPomodoroPane doro = do
       pomodoroPane <- newPomodoroPane
-      return $ \_ -> doro <.> setCenter pomodoroPane
+      stage <- asks primStage
+      return $ \_ -> do
+        doro <.> setCenter pomodoroPane
+        superCast stage <.> setHeight 700
+        superCast stage <.> setWidth 700
+
+    makeStartClockEvent :: JavaFX a (ActionEvent -> Java (EventHandler ActionEvent) ())
+    makeStartClockEvent = do
+      timer <- get
+      return $ \_ -> startClock timer
+
+    (.>.) :: Monad m => (a -> m b) -> (a -> m c) -> a -> m c
+    (.>.) f g x = f x >> g x
 
 
 -- | Make a menu bar for 'DoromochiPane'

@@ -124,6 +124,12 @@ foreign import java unsafe "setFitWidth" setFitWidth ::
 foreign import java unsafe "@new" newImage ::
   FilePath -> Java a Image
 
+foreign import java unsafe "@new" newImageViewOfEmpty ::
+  Java a ImageView
+
+foreign import java unsafe "setImage" setImage ::
+  Image -> Java ImageView ()
+
 foreign import java unsafe "@new" newMenuBar ::
   Java a MenuBar
 
@@ -167,6 +173,7 @@ foreign import java unsafe "@new" newBorderPane ::
   -> Maybe e -- ^ left
   -> Java f BorderPane
 
+--TODO: Generalize to `:: Extends a Node => Java BorderPane a` if it is able
 foreign import java unsafe "getTop" getTop ::
   Java BorderPane Node
 
@@ -203,6 +210,9 @@ foreign import java unsafe "getImage" getImage ::
 foreign import java unsafe "@new" newLabel ::
   String -> Java a Label
 
+foreign import java unsafe "setText" setText ::
+  Extends a Labeled => String -> Java a ()
+
 foreign import java unsafe "@new" newFlowPane' ::
   Java a FlowPane
 
@@ -229,3 +239,35 @@ foreign import java unsafe "@static @field javafx.geometry.Orientation.HORIZONTA
 
 foreign import java unsafe "@new" newHyperlink ::
   String -> Java a Hyperlink
+
+foreign import java unsafe "setHeight" setHeight ::
+  Double -> Java Window ()
+
+foreign import java unsafe "setWidth" setWidth ::
+  Double -> Java Window ()
+
+foreign import java unsafe "@new" newTimeline' ::
+  JKeyFrameArray -> Java a Timeline
+
+newTimeline :: [KeyFrame] -> Java a Timeline
+newTimeline xs = arrayFromList xs >>= newTimeline'
+
+foreign import java unsafe "setCycleCount" setCycleCount ::
+  Int -> Java Timeline ()
+
+foreign import java unsafe "@static @field javafx.animation.Animation.INDEFINITE" indefinite ::
+  Int
+
+foreign import java unsafe "play" playAnime ::
+  Extends a Animation => Java a ()
+
+foreign import java unsafe "@new" newKeyFrame' ::
+  Duration -> EventHandler ActionEvent -> JKeyValueArray -> Java a KeyFrame
+
+newKeyFrame :: Duration -> (ActionEvent -> Java (EventHandler ActionEvent) ()) -> [KeyValue] -> Java a KeyFrame
+newKeyFrame x f ys = do
+  ys' <- arrayFromList ys
+  newKeyFrame' x (handle f) ys'
+
+foreign import java unsafe "@static javafx.util.Duration.millis" millis ::
+  Double -> Duration

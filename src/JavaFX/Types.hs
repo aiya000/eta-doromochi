@@ -38,6 +38,12 @@ data {-# CLASS "javafx.stage.Stage" #-} Stage =
   Stage (Object# Stage)
   deriving (Class)
 
+type instance Inherits Stage = '[Window]
+
+data {-# CLASS "javafx.stage.Window" #-} Window =
+  Window (Object# Window)
+  deriving (Class)
+
 data {-# CLASS "javafx.scene.Parent" #-} Parent =
   Parent (Object# Parent)
   deriving (Class)
@@ -205,3 +211,37 @@ data {-# CLASS "javafx.scene.control.ButtonBase" #-} ButtonBase =
   deriving (Class)
 
 type instance Inherits ButtonBase = '[Labeled]
+
+data {-# CLASS "javafx.animation.Timeline" #-} Timeline =
+  Timeline (Object# Timeline)
+  deriving (Class)
+
+type instance Inherits Timeline = '[Animation]
+
+data {-# CLASS "javafx.animation.Animation" #-} Animation =
+  Animation (Object# Animation)
+  deriving (Class)
+
+data {-# CLASS "javafx.animation.KeyFrame" #-} KeyFrame =
+  KeyFrame (Object# KeyFrame)
+  deriving (Class)
+
+data {-# CLASS "javafx.animation.KeyFrame[]" #-} JKeyFrameArray =
+  JKeyFrameArray (Object# JKeyFrameArray)
+  deriving (Class)
+
+instance JArray KeyFrame JKeyFrameArray
+
+data {-# CLASS "javafx.animation.KeyValue" #-} KeyValue =
+  KeyValue (Object# KeyValue)
+  deriving (Class)
+
+data {-# CLASS "javafx.animation.KeyValue[]" #-} JKeyValueArray =
+  JKeyValueArray (Object# JKeyValueArray)
+  deriving (Class)
+
+instance JArray KeyValue JKeyValueArray
+
+data {-# CLASS "javafx.util.Duration" #-} Duration =
+  Duration (Object# Duration)
+  deriving (Class)
