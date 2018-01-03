@@ -215,15 +215,15 @@ correspondZunko _ (OnLongRest _) = zunkoOnLongRest
 guidance :: PomodoroStep -> String
 guidance (OnTask timeToNextShortRest timeToNextLongRest)
     = printf "次の休憩まであと%d分（次の長休憩まであと%d分）"
-        (asMinutes timeToNextShortRest)
-        (asMinutes timeToNextLongRest)
+        (asMinutes $ timeToNextShortRest + minutes 1) --NOTE: Why `+ 1` because a person maybe confused when they see "次の休憩まであと0分", and "次の休憩まであと24分" when the starting is just gotten
+        (asMinutes $ timeToNextLongRest + minutes 1)
 guidance (OnShortRest timeToNextWorking timeToNextLongRest)
     = printf "次の仕事時間まであと%d分（次の長休憩まであと%d分）"
-        (asMinutes timeToNextWorking)
-        (asMinutes timeToNextLongRest)
+        (asMinutes $ timeToNextWorking + minutes 1)
+        (asMinutes $ timeToNextLongRest + minutes 1)
 guidance (OnLongRest timeToNextWorking)
     = printf "次の仕事時間まであと%d分"
-        (asMinutes timeToNextWorking)
+        (asMinutes $ timeToNextWorking + minutes 1)
 
 
 --TODO: Move 'globalClock' and 'tickTimer' to the Reader
@@ -237,7 +237,7 @@ data PomodoroTimer = PomodoroTimer
 
 -- | A timer, that does nothing without 'startClock'
 newDefaultTimer :: Java a PomodoroTimer
-newDefaultTimer = PomodoroTimer def <$> io (newIORef 0) <*> io (newTimer >>= newIORef)
+newDefaultTimer = PomodoroTimer def <$> io (newIORef 1) <*> io (newTimer >>= newIORef)
 
 -- |
 -- Start a cycle of pomodoro technic with 'PomodoroTimer' of '`JavaFX` a'.

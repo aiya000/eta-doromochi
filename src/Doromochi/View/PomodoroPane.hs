@@ -24,19 +24,32 @@ newPomodoroPane :: JavaFX a PomodoroPane
 newPomodoroPane = do
   PomodoroTimer prefs clockRef _ <- get
   liftJ $ do
-    stopTimerButton <- newButton "Stop" --TODO: Implement the action
     zunkoImage <- newImageViewOfEmpty
-    guideLabel <- newLabel "ここはガイドです"
-    startWatcher prefs clockRef zunkoImage guideLabel
+    guideLabel <- newLabel "" -- e.g. "次の休憩まであと15分（次の長休憩まであと80分）"
+    timeLabel <- newLabel "" -- e.g. "Time: 00:25:20"
+    buttons <- makeButtons
+    startWatcher prefs clockRef ( zunkoImage
+                                , guideLabel
+                                , timeLabel
+                                )
     newFlowPane verticalOrient [ superCast zunkoImage
-                               , superCast stopTimerButton
+                               , superCast timeLabel
                                , superCast guideLabel
+                               , superCast buttons
                                ]
   where
-    startWatcher :: PomodoroIntervals -> IORef Seconds -> ImageView -> Label -> Java a ()
-    startWatcher prefs clockRef zunkoImage guideLabel = do
+    makeButtons :: Java a FlowPane
+    makeButtons = do
+      stopTimerButton <- newButton "Stop" --TODO: Implement the action
+      resetTimerButton <- newButton "Reset" --TODO: Implement the action
+      newFlowPane horizontalOrient $ map superCast [stopTimerButton, resetTimerButton]
+
+    startWatcher :: PomodoroIntervals -> IORef Seconds -> (ImageView , Label, Label) -> Java a ()
+    startWatcher prefs clockRef (zunkoImage, guideLabel, timeLabel) = do
       let watchClock _ = do
-            currentStep <- io $ calcStep prefs <$> readIORef clockRef
+            now <- io $ readIORef clockRef
+            timeLabel <.> setText ("Time " ++ show now)
+            let currentStep = calcStep prefs now
             currentZunko <- newZunkoImageOfStep prefs currentStep
             zunkoImage <.> setImage currentZunko
             guideLabel <.> setText (guidance currentStep)
