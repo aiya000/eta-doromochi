@@ -53,7 +53,7 @@ data PomodoroIntervals = PomodoroIntervals
   , timeOnShortRest :: Seconds -- ^ A rest time
   , lengthToLongRest :: Int
   , timeOnLongRest :: Seconds -- ^ A long rest time, this rest time comes after the cycle between 'timeOnTask' and 'timeOnShortRest' at 'lengthToLongRest' th is end
-  }
+  } deriving (Show)
 
 instance Default PomodoroIntervals where
   def = PomodoroIntervals { timeOnTask = minutes 25
@@ -135,22 +135,35 @@ data PomodoroStep =
     | OnLongRest
       Seconds -- ^ seconds to the next working
 
+{-
+                       timeOnShortRest
+|       timeOnTask        |  v  |
+|-------------------------|-----|
+|          a 'block'            |
+
+|                              n th blocks (n = lengthToLongRest)                               |         timeOnLongRest       |
+|-------------------------|-----|-------------------------|-----|-------------------------|-----|------------------------------|
+|                                                        a 'cycle'                                                             |
+-}
+
 --FIXME: The long rest comes instead of the short rest after the cycle is end n th. the short/long rest are not duplicated 
 -- | Calculate where 'Seconds' on 'PomodoroIntervals' is in
 calcStep :: PomodoroIntervals -> Seconds -> PomodoroStep
 calcStep prefs sec
-  | onTask sec prefs
-    = OnTask (nextShortRest sec prefs) (nextLongRest sec prefs)
+  | onLongRest sec prefs
+    = OnLongRest (nextWorking sec prefs)
   | onShortRest sec prefs
     = OnShortRest (nextWorking sec prefs) (nextLongRest sec prefs)
-  | otherwise -- If it is not on the task and is not on the short rest, so it is on the long rest
-    = OnLongRest (nextWorking sec prefs)
+  | onTask sec prefs
+    = OnTask (nextShortRest sec prefs) (nextLongRest sec prefs)
+  | otherwise -- Usually, this is not passed through
+    = error $ "calcStep: fatal error ! (" ++ show prefs ++ ", " ++ show sec ++ ")"
   where
-    -- A time of a short cycle
+    -- | A time of a short cycle ('timeOnTask' + 'timeOnShortRest')
     oneBlockOf :: PomodoroIntervals -> Seconds
     oneBlockOf (PomodoroIntervals {..}) = timeOnTask + timeOnShortRest
 
-    -- A time of a long cycle
+    -- | A time of a long cycle ('oneBlockOf' it * 'lengthToLongRest' + 'timeOnLongRest')
     oneCycleOf :: PomodoroIntervals -> Seconds
     oneCycleOf prefs@(PomodoroIntervals {..}) = oneBlockOf prefs .* lengthToLongRest + timeOnLongRest
 
@@ -160,21 +173,35 @@ calcStep prefs sec
     currentSec sec prefs = sec `mod` oneCycleOf prefs
 
     onTask :: Seconds -> PomodoroIntervals -> Bool
-    onTask sec prefs@(PomodoroIntervals {timeOnTask}) = currentSec sec prefs < timeOnTask
+    onTask sec prefs@(PomodoroIntervals {timeOnTask}) =
+      let now = currentSec sec prefs `mod` oneBlockOf prefs
+      in 0 <= now && now < timeOnTask
 
     onShortRest :: Seconds -> PomodoroIntervals -> Bool
-    onShortRest sec prefs = currentSec sec prefs < oneBlockOf prefs
+    onShortRest sec prefs@(PomodoroIntervals {..}) =
+      let now = currentSec sec prefs `mod` oneBlockOf prefs
+      in timeOnTask <= now && now < oneBlockOf prefs .* lengthToLongRest
+
+    onLongRest :: Seconds -> PomodoroIntervals -> Bool
+    onLongRest sec prefs@(PomodoroIntervals {..}) =
+      let now = currentSec sec prefs
+      in oneBlockOf prefs .* lengthToLongRest <= now && now < oneCycleOf prefs
 
     nextWorking :: Seconds -> PomodoroIntervals -> Seconds
-    nextWorking sec prefs = oneBlockOf prefs - currentSec sec prefs
+    nextWorking sec prefs =
+      let now = currentSec sec prefs `mod` oneBlockOf prefs
+      in oneBlockOf prefs - now
 
     nextLongRest :: Seconds -> PomodoroIntervals -> Seconds
     nextLongRest sec prefs@(PomodoroIntervals {lengthToLongRest}) =
-      oneBlockOf prefs .* lengthToLongRest - currentSec sec prefs
+      let now = currentSec sec prefs
+      in oneBlockOf prefs .* lengthToLongRest - now
 
     nextShortRest :: Seconds -> PomodoroIntervals -> Seconds
     nextShortRest sec prefs@(PomodoroIntervals {timeOnTask}) =
-      timeOnTask - currentSec sec prefs
+      let now = currentSec sec prefs `mod` oneBlockOf prefs
+      in timeOnTask - now
+
 
 -- |
 -- Return an expected file path of a png.
