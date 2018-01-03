@@ -22,9 +22,10 @@ library
                      , timers
   exposed-modules:     Doromochi.Main
                      , Doromochi.DoromochiApp
+                     , Doromochi.FilePath
+                     , Doromochi.Types
                      , Doromochi.View.DoromochiPane
                      , Doromochi.View.LicensePane
-                     , Doromochi.Types
                      , Java.Doromochi
                      , JavaFX
                      , JavaFX.Core
