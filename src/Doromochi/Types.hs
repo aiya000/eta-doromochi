@@ -135,6 +135,7 @@ data PomodoroStep =
     | OnLongRest
       Seconds -- ^ seconds to the next working
 
+--FIXME: The long rest comes instead of the short rest after the cycle is end n th. the short/long rest are not duplicated 
 -- | Calculate where 'Seconds' on 'PomodoroIntervals' is in
 calcStep :: PomodoroIntervals -> Seconds -> PomodoroStep
 calcStep prefs sec
