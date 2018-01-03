@@ -5,7 +5,7 @@ module Doromochi.View.PomodoroPane
 
 import Control.Monad.State.Strict (get)
 import Data.IORef (IORef, readIORef)
-import Doromochi.Types (JavaFX, liftJ, PomodoroTimer(..), Seconds, guidance, PomodoroIntervals(..))
+import Doromochi.Types
 import Java
 import Java.Doromochi (newFile, toURI, toURL)
 import JavaFX
@@ -28,7 +28,7 @@ newPomodoroPane = do
     zunkoImage <- newImageViewOfEmpty
     guideLabel <- newLabel "ここはガイドです"
     startWatcher prefs clockRef zunkoImage guideLabel
-    newFlowPane verticalOrient [ superCast restTimeZunko
+    newFlowPane verticalOrient [ superCast zunkoImage
                                , superCast stopTimerButton
                                , superCast guideLabel
                                ]
@@ -36,30 +36,21 @@ newPomodoroPane = do
     startWatcher :: PomodoroIntervals -> IORef Seconds -> ImageView -> Label -> Java a ()
     startWatcher prefs clockRef zunkoImage guideLabel = do
       let watchClock _ = do
-            now <- io $ readIORef clockRef
-            let currentStep = foo prefs now
-            let file = imageOf currentStep
-            zunkoImage <.> setImage file
-            let whenNextStepIsCome = guidance currentStep prefs now
-            guideLabel <.> setText whenNextStepIsCome
+            currentStep <- io $ calcStep prefs <$> readIORef clockRef
+            currentZunko <- newZunkoImageOfStep prefs currentStep
+            zunkoImage <.> setImage currentZunko
+            guideLabel <.> setText (guidance currentStep)
       timeline <- newKeyFrame (millis 1000) watchClock [] >>= newTimeline . (:[])
       timeline <.> setCycleCount indefinite
       timeline <.> playAnime
 
-
--- | Make an image view with `~/.config/doromochi/images/rest_time.png` for 'DoromochiPane'
-makeRestTimeImageView :: Java a ImageView
-makeRestTimeImageView = do
-  configDir <- io $ (++ "/.config/doromochi") <$> getEnv "HOME"
-  imageView <- newImageViewFrom $ configDir ++ "/images/rest_time.png"
-  imageView <.> setFitHeight 512
-  imageView <.> setFitWidth  512
-  return imageView
-  where
-    newImageViewFrom :: FilePath -> Java a ImageView
-    newImageViewFrom x =
-      newFile x >- toURI
-                >- toURL
-                >- withThis (return . fromJava . toString)
-                >>= newImage
-                >>= newImageView
+    -- Read a 'Image' with the correspond png file with a 'PomodoroStep'
+    newZunkoImageOfStep :: PomodoroIntervals -> PomodoroStep -> Java a Image
+    newZunkoImageOfStep prefs step = do
+      imagesDir <- io $ (++ "/.config/doromochi/images/") <$> getEnv "HOME"
+      let correspondFile = imagesDir ++ correspondZunko prefs step
+      newFile correspondFile
+        >- toURI
+        >- toURL
+        >- withThis (return . fromJava . toString)
+        >>= newImage

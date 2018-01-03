@@ -115,6 +115,9 @@ setOnButtonAction = setOnButtonAction' . handle
 foreign import java unsafe "@new" newImageView ::
   Image -> Java a ImageView
 
+foreign import java unsafe "@new" newImageViewOfEmpty ::
+  Java a ImageView
+
 foreign import java unsafe "setFitHeight" setFitHeight ::
   Double -> Java ImageView ()
 
@@ -123,9 +126,6 @@ foreign import java unsafe "setFitWidth" setFitWidth ::
 
 foreign import java unsafe "@new" newImage ::
   FilePath -> Java a Image
-
-foreign import java unsafe "@new" newImageViewOfEmpty ::
-  Java a ImageView
 
 foreign import java unsafe "setImage" setImage ::
   Image -> Java ImageView ()

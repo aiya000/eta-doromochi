@@ -1,4 +1,5 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MultiWayIf #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TupleSections #-}
 
@@ -12,6 +13,8 @@ module Doromochi.Types
   , asMinutes
   , simpler
   , PomodoroStep (..)
+  , calcStep
+  , correspondZunko
   , guidance
   , PomodoroTimer (..)
   , newDefaultTimer
@@ -32,6 +35,7 @@ import Control.Monad.Reader (MonadReader)
 import Control.Monad.State.Strict (MonadState(..))
 import Data.Default (Default(..))
 import Data.IORef (IORef, newIORef, modifyIORef, readIORef)
+import Doromochi.FilePath (zunkoOnTaskFirstHalf, zunkoOnTaskLastHalf, zunkoOnShortRest, zunkoOnLongRest)
 import Java
 import JavaFX
 import Text.Printf (printf)
@@ -119,37 +123,26 @@ asMinutes = (`div` 60) . unSeconds
 
 
 --NOTE: Can haddock generate ?
+-- | A step of the pomodoro technic with appendix states
 data PomodoroStep =
-    -- | A pomodoro is on task, but this phase is just getting start
-    OnTaskFirstHalf
+    OnTask
       Seconds -- ^ seconds to the next short rest
       Seconds -- ^ seconds to the next long rest
-    |
-    -- | A pomodoro is on task, but this phase will be finished soon
-    OnTaskLastHalf 
-      Seconds -- ^ seconds to the next short rest
-      Seconds -- ^ seconds to the next long rest
-    |
-    OnShortRest
+    | OnShortRest
       Seconds -- ^ seconds to the next working
       Seconds -- ^ seconds to the next long rest
-    |
-    OnLongRest
-      Second -- ^ seconds to the next working
+    | OnLongRest
+      Seconds -- ^ seconds to the next working
 
-stepOf :: PomodoroIntervals -> Seconds -> String
-stepOf prefs@(PomodoroIntervals {..}) sec
+-- | Calculate where 'Seconds' on 'PomodoroIntervals' is in
+calcStep :: PomodoroIntervals -> Seconds -> PomodoroStep
+calcStep prefs@(PomodoroIntervals {..}) sec
   | onTask sec prefs
-    = printf "次の休憩まであと%d分（次の長休憩まであと%d分）"
-        (asMinutes $ nextShortRest sec prefs)
-        (asMinutes $ nextLongRest sec prefs)
+    = OnTask (nextShortRest sec prefs) (nextLongRest sec prefs)
   | onShortRest sec prefs
-    = printf "次の仕事時間まであと%d分（次の長休憩まであと%d分）"
-        (asMinutes $ nextWorking sec prefs)
-        (asMinutes $ nextLongRest sec prefs)
-  | otherwise -- on long rest
-    = printf "次の仕事時間まであと%d分"
-        (asMinutes $ nextWorking sec prefs)
+    = OnShortRest (nextWorking sec prefs) (nextLongRest sec prefs)
+  | otherwise -- If it is not on the task and is not on the short rest, so it is on the long rest
+    = OnLongRest (nextWorking sec prefs)
   where
     -- A length of a 'PomodoroIntervals' cycle but without 'timeOnLongRest', as 'Seconds'
     aCycleSec :: PomodoroIntervals -> Seconds
@@ -163,77 +156,67 @@ stepOf prefs@(PomodoroIntervals {..}) sec
     onShortRest sec prefs@(PomodoroIntervals {..})
       = sec `mod` aCycleSec prefs < timeOnTask + timeOnShortRest
 
-    --TODO: Use `Minutes` instead of `Int`
     nextWorking :: Seconds -> PomodoroIntervals -> Seconds
     nextWorking sec prefs@(PomodoroIntervals {..})
       = (timeOnTask + timeOnShortRest) - (sec `mod` aCycleSec prefs)
 
-    --TODO: Use `Minutes` instead of `Int`
     nextLongRest :: Seconds -> PomodoroIntervals -> Seconds
     nextLongRest sec prefs@(PomodoroIntervals {..})
       = (timeOnTask + timeOnShortRest) .* lengthToLongRest - (sec `mod` aCycleSec prefs)
 
-    --TODO: Use `Minutes` instead of `Int`
     nextShortRest :: Seconds -> PomodoroIntervals -> Seconds
     nextShortRest sec prefs@(PomodoroIntervals {..})
       = timeOnTask - (sec `mod` aCycleSec prefs)
 
+-- |
+-- Return an expected file path of a png.
+--
+-- This doesn't include a directory path, return only the path of a file.
+-- This means this result requires to be combined with $HOME or somewhere.
+correspondZunko :: PomodoroIntervals -> PomodoroStep -> FilePath
+correspondZunko (PomodoroIntervals {..}) (OnTask timeToNextShortRest _) =
+  let secAfterWorkingIsStarted = timeOnTask - timeToNextShortRest
+      halfTimeOnTask = timeOnTask `div` 2
+  in if | halfTimeOnTask <= secAfterWorkingIsStarted -> zunkoOnTaskFirstHalf
+        | otherwise -> zunkoOnTaskLastHalf
+correspondZunko _ (OnShortRest _ _) = zunkoOnShortRest
+correspondZunko _ (OnLongRest _) = zunkoOnLongRest
 
-
---TODO: Enable doctest
+--TODO: Enable doctest (Fix dependencies problem)
 -- |
 -- Show it as a guidance for the next step
 --
 -- >>> default (Seconds)
 --
--- >>> guidance def $ minutes 10
+-- >>> guidance $ OnTask (minutes 15) (minutes 80)
 -- "次の休憩まであと15分（次の長休憩まであと80分）"
 --
--- >>> guidance def $ minutes 26
+-- >>> guidance $ OnShortRest (minutes 4) (minutes 64)
 -- "次の仕事時間まであと4分（次の長休憩まであと64分）"
 --
--- >>> guidance def $ minutes 80
--- "次の長休憩まであと10分"
-guidance :: PomodoroIntervals -> Seconds -> String
-guidance prefs@(PomodoroIntervals {..}) sec
-  | onTask sec prefs
+-- >>> guidance $ OnLongRest (minutes 10)
+-- "次の仕事時間まであと10分"
+--
+-- NOTICE:
+-- This allows conditions that maybe invalid.
+-- For example,
+-- a time to the next short rest should be less than a time to next long rest on a working.
+-- (That time to next long rest is not existent)
+--
+-- >>> guidance $ OnTask (minutes 80) (minutes 15)
+-- "次の休憩まであと80分（次の長休憩まであと15分）"
+guidance :: PomodoroStep -> String
+guidance (OnTask timeToNextShortRest timeToNextLongRest)
     = printf "次の休憩まであと%d分（次の長休憩まであと%d分）"
-        (asMinutes $ nextShortRest sec prefs)
-        (asMinutes $ nextLongRest sec prefs)
-  | onShortRest sec prefs
+        (asMinutes timeToNextShortRest)
+        (asMinutes timeToNextLongRest)
+guidance (OnShortRest timeToNextWorking timeToNextLongRest)
     = printf "次の仕事時間まであと%d分（次の長休憩まであと%d分）"
-        (asMinutes $ nextWorking sec prefs)
-        (asMinutes $ nextLongRest sec prefs)
-  | otherwise -- on long rest
+        (asMinutes timeToNextWorking)
+        (asMinutes timeToNextLongRest)
+guidance (OnLongRest timeToNextWorking)
     = printf "次の仕事時間まであと%d分"
-        (asMinutes $ nextWorking sec prefs)
-  where
-    -- A length of a 'PomodoroIntervals' cycle but without 'timeOnLongRest', as 'Seconds'
-    aCycleSec :: PomodoroIntervals -> Seconds
-    aCycleSec (PomodoroIntervals {..}) = (timeOnTask + timeOnShortRest) .* lengthToLongRest + timeOnLongRest
-
-    onTask :: Seconds -> PomodoroIntervals -> Bool
-    onTask sec prefs@(PomodoroIntervals {..})
-      = sec `mod` aCycleSec prefs < timeOnTask
-
-    onShortRest :: Seconds -> PomodoroIntervals -> Bool
-    onShortRest sec prefs@(PomodoroIntervals {..})
-      = sec `mod` aCycleSec prefs < timeOnTask + timeOnShortRest
-
-    --TODO: Use `Minutes` instead of `Int`
-    nextWorking :: Seconds -> PomodoroIntervals -> Seconds
-    nextWorking sec prefs@(PomodoroIntervals {..})
-      = (timeOnTask + timeOnShortRest) - (sec `mod` aCycleSec prefs)
-
-    --TODO: Use `Minutes` instead of `Int`
-    nextLongRest :: Seconds -> PomodoroIntervals -> Seconds
-    nextLongRest sec prefs@(PomodoroIntervals {..})
-      = (timeOnTask + timeOnShortRest) .* lengthToLongRest - (sec `mod` aCycleSec prefs)
-
-    --TODO: Use `Minutes` instead of `Int`
-    nextShortRest :: Seconds -> PomodoroIntervals -> Seconds
-    nextShortRest sec prefs@(PomodoroIntervals {..})
-      = timeOnTask - (sec `mod` aCycleSec prefs)
+        (asMinutes timeToNextWorking)
 
 
 --TODO: Move 'globalClock' and 'tickTimer' to the Reader
