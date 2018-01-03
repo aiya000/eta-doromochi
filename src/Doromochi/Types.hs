@@ -1,5 +1,6 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiWayIf #-}
+{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TupleSections #-}
 
@@ -136,7 +137,7 @@ data PomodoroStep =
 
 -- | Calculate where 'Seconds' on 'PomodoroIntervals' is in
 calcStep :: PomodoroIntervals -> Seconds -> PomodoroStep
-calcStep prefs@(PomodoroIntervals {..}) sec
+calcStep prefs sec
   | onTask sec prefs
     = OnTask (nextShortRest sec prefs) (nextLongRest sec prefs)
   | onShortRest sec prefs
@@ -144,29 +145,35 @@ calcStep prefs@(PomodoroIntervals {..}) sec
   | otherwise -- If it is not on the task and is not on the short rest, so it is on the long rest
     = OnLongRest (nextWorking sec prefs)
   where
-    -- A length of a 'PomodoroIntervals' cycle but without 'timeOnLongRest', as 'Seconds'
-    aCycleSec :: PomodoroIntervals -> Seconds
-    aCycleSec (PomodoroIntervals {..}) = (timeOnTask + timeOnShortRest) .* lengthToLongRest + timeOnLongRest
+    -- A time of a short cycle
+    oneBlockOf :: PomodoroIntervals -> Seconds
+    oneBlockOf (PomodoroIntervals {..}) = timeOnTask + timeOnShortRest
+
+    -- A time of a long cycle
+    oneCycleOf :: PomodoroIntervals -> Seconds
+    oneCycleOf prefs@(PomodoroIntervals {..}) = oneBlockOf prefs .* lengthToLongRest + timeOnLongRest
+
+    -- Remove times of any cycle from a 'Seconds'
+    -- (Extract a time, it is after the current cycle starts)
+    currentSec :: Seconds -> PomodoroIntervals -> Seconds
+    currentSec sec prefs = sec `mod` oneCycleOf prefs
 
     onTask :: Seconds -> PomodoroIntervals -> Bool
-    onTask sec prefs@(PomodoroIntervals {..})
-      = sec `mod` aCycleSec prefs < timeOnTask
+    onTask sec prefs@(PomodoroIntervals {timeOnTask}) = currentSec sec prefs < timeOnTask
 
     onShortRest :: Seconds -> PomodoroIntervals -> Bool
-    onShortRest sec prefs@(PomodoroIntervals {..})
-      = sec `mod` aCycleSec prefs < timeOnTask + timeOnShortRest
+    onShortRest sec prefs = currentSec sec prefs < oneBlockOf prefs
 
     nextWorking :: Seconds -> PomodoroIntervals -> Seconds
-    nextWorking sec prefs@(PomodoroIntervals {..})
-      = (timeOnTask + timeOnShortRest) - (sec `mod` aCycleSec prefs)
+    nextWorking sec prefs = oneBlockOf prefs - currentSec sec prefs
 
     nextLongRest :: Seconds -> PomodoroIntervals -> Seconds
-    nextLongRest sec prefs@(PomodoroIntervals {..})
-      = (timeOnTask + timeOnShortRest) .* lengthToLongRest - (sec `mod` aCycleSec prefs)
+    nextLongRest sec prefs@(PomodoroIntervals {lengthToLongRest}) =
+      oneBlockOf prefs .* lengthToLongRest - currentSec sec prefs
 
     nextShortRest :: Seconds -> PomodoroIntervals -> Seconds
-    nextShortRest sec prefs@(PomodoroIntervals {..})
-      = timeOnTask - (sec `mod` aCycleSec prefs)
+    nextShortRest sec prefs@(PomodoroIntervals {timeOnTask}) =
+      timeOnTask - currentSec sec prefs
 
 -- |
 -- Return an expected file path of a png.
