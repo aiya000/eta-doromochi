@@ -5,8 +5,8 @@
 -- This means the constants requires to be combined with $HOME or somewhere.
 module Doromochi.FilePath where
 
---TODO: Rename work_finishes.png to on_long_rest.png
---TODO: Rename rest_time.png to on_short_rest.png
+--TODO: Rename rest_time.png to on_long_rest.png
+--TODO: Rename work_finishes.png to on_short_rest.png
 --TODO: Rename work_in_progress_head.png to on_task_first_half.png
 --TODO: Rename work_in_progress_tail.png to on_task_last_half.png
 
@@ -18,7 +18,7 @@ zunkoOnTaskLastHalf :: FilePath
 zunkoOnTaskLastHalf = "work_in_progress_tail.png"
 
 zunkoOnShortRest :: FilePath
-zunkoOnShortRest = "rest_time.png"
+zunkoOnShortRest = "work_finishes.png"
 
 zunkoOnLongRest :: FilePath
-zunkoOnLongRest = "work_finishes.png"
+zunkoOnLongRest = "rest_time.png"
