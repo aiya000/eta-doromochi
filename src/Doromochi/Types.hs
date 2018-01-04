@@ -11,6 +11,7 @@ module Doromochi.Types
   , Seconds (..)
   , (.*)
   , hours
+  , minutes
   , asMinutes
   , simpler
   , PomodoroStep (..)
