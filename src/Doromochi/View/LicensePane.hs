@@ -13,6 +13,7 @@ import JavaFX
 type LicensePane = FlowPane
 --TODO: ^ Use newtype or data
 
+--TODO: Type the context `Java a` instead of `JavaFX a`
 --TODO: Improve appearance
 -- | Make a view of 'LicensePane'
 newLicensePane :: JavaFX a LicensePane

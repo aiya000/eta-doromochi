@@ -245,3 +245,25 @@ instance JArray KeyValue JKeyValueArray
 data {-# CLASS "javafx.util.Duration" #-} Duration =
   Duration (Object# Duration)
   deriving (Class)
+
+data {-# CLASS "javafx.scene.control.TextField" #-} TextField =
+  TextField (Object# TextField)
+  deriving (Class)
+
+type instance Inherits TextField = '[TextInputControl]
+
+data {-# CLASS "javafx.scene.control.TextInputControl" #-} TextInputControl =
+  TextInputControl (Object# TextInputControl)
+  deriving (Class)
+
+type instance Inherits TextInputControl = '[Control]
+
+data {-# CLASS "javafx.scene.control.Spinner" #-} Spinner a =
+  Spinner (Object# (Spinner a))
+  deriving (Class)
+
+type instance Inherits (Spinner a) = '[Control]
+
+data {-# CLASS "javafx.scene.control.SpinnerValueFactory" #-} SpinnerValueFactory a =
+  SpinnerValueFactory (Object# (SpinnerValueFactory a))
+  deriving (Class)

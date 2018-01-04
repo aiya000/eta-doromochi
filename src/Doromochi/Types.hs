@@ -29,17 +29,20 @@ module Doromochi.Types
 
 import Control.Concurrent.Suspend (sDelay)
 import Control.Concurrent.Timer (TimerIO, newTimer, repeatedStart)
-import Control.Lens (Lens', lens, (&), (%~))
+import Control.Lens (Lens', lens, (%~))
 import Control.Monad (void, when)
-import Control.Monad.RWS.Strict (RWST(..))
 import Control.Monad.Reader (MonadReader, ReaderT(..))
-import Control.Monad.State.Strict (MonadState(..))
 import Data.Default (Default(..))
-import Data.IORef (IORef, newIORef, modifyIORef, readIORef)
+import Data.IORef (IORef, modifyIORef, readIORef)
 import Doromochi.FilePath (zunkoOnTaskFirstHalf, zunkoOnTaskLastHalf, zunkoOnShortRest, zunkoOnLongRest)
 import Java
 import JavaFX
 import Text.Printf (printf)
+
+--TODO: Remove these import
+import qualified System.IO.Unsafe as Debug
+import qualified Debug.Trace as Debug
+--
 
 -- | A javafx application's resources
 data AppRoot = AppRoot
@@ -279,10 +282,9 @@ newDefaultTimer = PomodoroTimer def 1 <$> io newTimer
 -- (e.g. 'setOnButtonAction').
 startClock :: IORef PomodoroTimer -> Java a ()
 startClock refs = io $ do
-  PomodoroTimer _ clock timer <- readIORef refs
-  let incrementClock = modifyIORef refs $ \timer -> timer & _pomodoroClock %~ (+1)
-  succeed <- repeatedStart timer incrementClock _1sec
-  when (not succeed) $ error "startClock: fatal error ! ('pomodoroClock' couldn't be started)"
+  timer <- tickTimer <$> readIORef refs
+  let incrementClock = modifyIORef refs $ _pomodoroClock %~ (+1)
+  void $ repeatedStart timer incrementClock _1sec
   where
     _1sec = sDelay 1
 

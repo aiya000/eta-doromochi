@@ -91,6 +91,9 @@ foreign import java unsafe "@new" newStage ::
 foreign import java unsafe "show" showStage ::
   Java Stage ()
 
+foreign import java unsafe "showAndWait" showStageAndWait ::
+  Java Stage ()
+
 foreign import java unsafe "setTitle" setTitle ::
   String -> Java Stage ()
 
@@ -271,3 +274,17 @@ newKeyFrame x f ys = do
 
 foreign import java unsafe "@static javafx.util.Duration.millis" millis ::
   Double -> Duration
+
+foreign import java unsafe "@new" newTextField ::
+  String -> Java a TextField
+
+--NOTE: Maybe, this `Int` can be generalized to `a` with a type class
+foreign import java unsafe "@new" newSpinner ::
+     Int -- ^ min value
+  -> Int -- ^ max value
+  -> Int -- ^ initial value
+  -> Java a (Spinner Int)
+
+--FIXME: Generalize to Java (Spinner a) a (now, this is impeded 'eta: panic!' on Eta 0.0.9b3)
+foreign import java unsafe "getValue" getSpinnerValue ::
+  Java (Spinner Int) Int

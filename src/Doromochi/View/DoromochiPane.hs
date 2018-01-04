@@ -8,6 +8,7 @@ import Data.IORef (newIORef)
 import Doromochi.Types
 import Doromochi.View.LicensePane (newLicensePane)
 import Doromochi.View.PomodoroPane (newPomodoroPane)
+import Doromochi.View.PreferencesPane (newPreferencesPane)
 import Java
 import JavaFX
 
@@ -53,15 +54,24 @@ newDoromochiPane = do
 -- | Make a menu bar for 'DoromochiPane'
 makeMenuBar :: JavaFX a MenuBar
 makeMenuBar = do
-  openLisenceWindow <- makeOpenLisenceWindow
+  libraryMenu <- makeLibraryMenu
+  prefsMenu   <- makePrefsMenu
   liftJ $ do
     menuBar <- newMenuBar
-    licenseMenu <- newMenu "Library"
+    menuBar <.> getMenus >- addChild libraryMenu
+    menuBar <.> getMenus >- addChild prefsMenu
+    return menuBar
+
+
+makeLibraryMenu :: JavaFX a Menu
+makeLibraryMenu = do
+  openLisenceWindow <- makeOpenLisenceWindow
+  liftJ $ do
     licenseItem <- newMenuItem "License"
     licenseItem <.> setOnMenuItemAction openLisenceWindow
-    licenseMenu <.> getMenuItems >- addChild licenseItem
-    menuBar <.> getMenus >- addChild licenseMenu
-    return menuBar
+    self <- newMenu "Library"
+    self <.> getMenuItems >- addChild licenseItem
+    return self
   where
     -- Open a new window for 'LicensePane'
     makeOpenLisenceWindow :: JavaFX a (ActionEvent -> Java (EventHandler ActionEvent) ())
@@ -75,11 +85,22 @@ makeMenuBar = do
         stage <.> setScene scene
         stage <.> showStage
 
-    --makeOpenPreferencesWindow :: JavaFX a (ActionEvent -> Java (EventHandler ActionEvent) ())
-    --makeOpenPreferencesWindow = do
-    --  prefsRef <- gets intervalPrefs >>= liftJIO . newIORef
-    --  return $ \_ -> do
-    --    prefsScene <- newPreferencesPane prefsRef >>= newSceneWithoutSize
-    --    stage <- newStage
-    --    stage <.> prefsScene
-    --    stage <.> showStageAndWait
+
+makePrefsMenu :: JavaFX a Menu
+makePrefsMenu = do
+  openPrefsWindow <- makeOpenPrefsWindow
+  liftJ $ do
+    prefsItem <- newMenuItem "Config"
+    prefsItem <.> setOnMenuItemAction openPrefsWindow
+    self <- newMenu "Preference"
+    self <.> getMenuItems >- addChild prefsItem
+    return self
+  where
+    makeOpenPrefsWindow :: JavaFX a (ActionEvent -> Java (EventHandler ActionEvent) ())
+    makeOpenPrefsWindow = do
+      timerRef <- snd <$> ask
+      return $ \_ -> do
+        prefsScene <- newPreferencesPane timerRef >>= newSceneWithoutSize
+        stage <- newStage
+        stage <.> setScene prefsScene
+        stage <.> showStageAndWait
