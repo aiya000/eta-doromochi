@@ -16,6 +16,7 @@ library
   ghc-options:         -Wall -fno-warn-name-shadowing -fno-warn-unused-do-bind -fno-warn-orphans -fno-warn-type-defaults -fprint-explicit-kinds
   build-depends:       base >=4.8 && < 4.9
                      , data-default
+                     , lens
                      , mtl
                      , safe-exceptions
                      , suspend
