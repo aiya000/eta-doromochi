@@ -3,8 +3,8 @@ module Doromochi.View.DoromochiPane
   , newDoromochiPane
   ) where
 
-import Control.Monad.Reader (asks)
-import Control.Monad.State.Strict (get)
+import Control.Monad.Reader (ask, asks)
+import Data.IORef (newIORef)
 import Doromochi.Types
 import Doromochi.View.LicensePane (newLicensePane)
 import Doromochi.View.PomodoroPane (newPomodoroPane)
@@ -35,7 +35,7 @@ newDoromochiPane = do
     makeIntentToPomodoroPane :: DoromochiPane -> JavaFX a (ActionEvent -> Java (EventHandler ActionEvent) ())
     makeIntentToPomodoroPane doro = do
       pomodoroPane <- newPomodoroPane
-      stage <- asks primStage
+      stage <- asks $ primStage . fst
       return $ \_ -> do
         doro <.> setCenter pomodoroPane
         superCast stage <.> setHeight 700
@@ -43,8 +43,8 @@ newDoromochiPane = do
 
     makeStartClockEvent :: JavaFX a (ActionEvent -> Java (EventHandler ActionEvent) ())
     makeStartClockEvent = do
-      timer <- get
-      return $ \_ -> startClock timer
+      timerRef <- snd <$> ask
+      return $ \_ -> startClock timerRef
 
     (.>.) :: Monad m => (a -> m b) -> (a -> m c) -> a -> m c
     (.>.) f g x = f x >> g x
@@ -66,11 +66,20 @@ makeMenuBar = do
     -- Open a new window for 'LicensePane'
     makeOpenLisenceWindow :: JavaFX a (ActionEvent -> Java (EventHandler ActionEvent) ())
     makeOpenLisenceWindow = do
-      app <- asks fxApp
+      app <- asks $ fxApp . fst
       return $ \_ -> do
         stage <- newStage
-        emptyTimer <- newDefaultTimer
-        licensePane <- flip (evalJavaFX newLicensePane) emptyTimer $ AppCore stage app
+        emptyTimerRef <- newDefaultTimer >>= io . newIORef
+        licensePane <- runJavaFX newLicensePane (AppRoot stage app, emptyTimerRef)
         scene <- newSceneWithoutSize licensePane
         stage <.> setScene scene
         stage <.> showStage
+
+    --makeOpenPreferencesWindow :: JavaFX a (ActionEvent -> Java (EventHandler ActionEvent) ())
+    --makeOpenPreferencesWindow = do
+    --  prefsRef <- gets intervalPrefs >>= liftJIO . newIORef
+    --  return $ \_ -> do
+    --    prefsScene <- newPreferencesPane prefsRef >>= newSceneWithoutSize
+    --    stage <- newStage
+    --    stage <.> prefsScene
+    --    stage <.> showStageAndWait

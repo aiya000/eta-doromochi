@@ -6,7 +6,7 @@
 
 -- | Define doromochi specific types
 module Doromochi.Types
-  ( AppCore (..)
+  ( AppRoot (..)
   , PomodoroIntervals (..)
   , Seconds (..)
   , (.*)
@@ -20,21 +20,18 @@ module Doromochi.Types
   , PomodoroTimer (..)
   , newDefaultTimer
   , startClock
-  , RST
-  , rst
-  , runRST
   , JavaFX (..)
   , runJavaFX
-  , evalJavaFX
-  , execJavaFX
   , liftJ
+  , liftJIO
   ) where
 
 import Control.Concurrent.Suspend (sDelay)
 import Control.Concurrent.Timer (TimerIO, newTimer, repeatedStart)
-import Control.Monad (void)
+import Control.Lens (Lens', lens, (&), (%~))
+import Control.Monad (void, when)
 import Control.Monad.RWS.Strict (RWST(..))
-import Control.Monad.Reader (MonadReader)
+import Control.Monad.Reader (MonadReader, ReaderT(..))
 import Control.Monad.State.Strict (MonadState(..))
 import Data.Default (Default(..))
 import Data.IORef (IORef, newIORef, modifyIORef, readIORef)
@@ -44,7 +41,7 @@ import JavaFX
 import Text.Printf (printf)
 
 -- | A javafx application's resources
-data AppCore = AppCore
+data AppRoot = AppRoot
   { primStage :: Stage       -- ^ This is the only existing in this app
   , fxApp     :: Application -- ^ This is the only existing too
   }
@@ -256,18 +253,22 @@ guidance (OnLongRest timeToNextWorking)
         (asMinutes $ timeToNextWorking + minutes 1)
 
 
---TODO: Move 'globalClock' and 'tickTimer' to the Reader
---TODO: Use STM in 'globalClock' and 'tickTimer'
 -- | A state on between `'JavaFX` a' and `'Java' a`, measures the pomodoro times
 data PomodoroTimer = PomodoroTimer
   { intervalPrefs :: PomodoroIntervals -- ^ Preferences of 'PomodoroIntervals'
-  , globalClock :: IORef Seconds -- ^ An unique clock on `'JavaFX' a`, be counted up by 'tickTimer'
-  , tickTimer :: IORef TimerIO -- ^ Increment 'globalClock' on a second after 'startClock' is executed
+  , pomodoroClock :: Seconds -- ^ An unique clock on a `'JavaFX' a`, be counted up by 'tickTimer'
+  , tickTimer :: TimerIO -- ^ Increment 'pomodoroClock' on a second after 'startClock' is executed
   }
+
+_intervalPrefs :: Lens' PomodoroTimer PomodoroIntervals
+_intervalPrefs = lens intervalPrefs $ \x newer -> x {intervalPrefs = newer}
+
+_pomodoroClock :: Lens' PomodoroTimer Seconds
+_pomodoroClock = lens pomodoroClock $ \x newer -> x {pomodoroClock = newer}
 
 -- | A timer, that does nothing without 'startClock'
 newDefaultTimer :: Java a PomodoroTimer
-newDefaultTimer = PomodoroTimer def <$> io (newIORef 1) <*> io (newTimer >>= newIORef)
+newDefaultTimer = PomodoroTimer def 1 <$> io newTimer
 
 -- |
 -- Start a cycle of pomodoro technic with 'PomodoroTimer' of '`JavaFX` a'.
@@ -275,52 +276,37 @@ newDefaultTimer = PomodoroTimer def <$> io (newIORef 1) <*> io (newTimer >>= new
 -- This is in `'Java' a`
 -- because this is expected to be passed to a handler
 -- (e.g. 'setOnButtonAction').
-startClock :: PomodoroTimer -> Java a ()
-startClock (PomodoroTimer _ clockRef timerRef) = io $ do
-  let _1sec = sDelay 1
-  let incrementClock = modifyIORef clockRef (+1)
-  timer <- readIORef timerRef
-  void $ repeatedStart timer incrementClock _1sec
+startClock :: IORef PomodoroTimer -> Java a ()
+startClock refs = io $ do
+  PomodoroTimer _ clock timer <- readIORef refs
+  let incrementClock = modifyIORef refs $ \timer -> timer & _pomodoroClock %~ (+1)
+  succeed <- repeatedStart timer incrementClock _1sec
+  when (not succeed) $ error "startClock: fatal error ! ('pomodoroClock' couldn't be started)"
+  where
+    _1sec = sDelay 1
 
 
-type RST r s m a = RWST r () s m a
+-- | This is impure type because 'IORef a's are passed to `Java b`s and to be modified
+type AppEnv = (AppRoot, IORef PomodoroTimer)
 
---TODO: Remove `Monad m` restriction
-rst :: Monad m => (r -> s -> m (a, s)) -> RST r s m a
-rst f = RWST $ \r s -> do
-  (x, y) <- f r s
-  return (x, y, ())
-
---TODO: Remove `Monad m` restriction
-runRST :: Monad m => RST r s m a -> r -> s -> m (a, s)
-runRST x r s = runRWST x r s >>= \(a, b, ()) -> return (a, b)
-
-
+--TODO: Use STM for `'IORef' 'PomodoroTimer'`
 -- | Store resources that depends the javafx application
 newtype JavaFX a b = JavaFX
-  { unJavaFX :: RST AppCore PomodoroTimer (Java a) b
+  { unJavaFX :: ReaderT AppEnv (Java a) b
   } deriving ( Functor
              , Applicative
              , Monad
-             , MonadReader AppCore
-             , MonadState PomodoroTimer
+             , MonadReader AppEnv
              )
 
 -- | Extract `'JavaFX' a`
-runJavaFX :: JavaFX a b -> AppCore -> PomodoroTimer -> Java a (b, PomodoroTimer)
-runJavaFX context r s = do
-  (x, s', _) <- runRWST (unJavaFX context) r s
-  return (x, s')
-
--- | Similar to 'runJavaFX' but without the result of the state
-evalJavaFX :: JavaFX a b -> AppCore -> PomodoroTimer -> Java a b
-evalJavaFX context r s = fst <$> runJavaFX context r s
-
--- | Similar to 'runJavaFX' but without the primary result
-execJavaFX :: JavaFX a b -> AppCore -> PomodoroTimer -> Java a PomodoroTimer
-execJavaFX context r s = snd <$> runJavaFX context r s
+runJavaFX :: JavaFX a b -> AppEnv -> Java a b
+runJavaFX = runReaderT . unJavaFX
 
 -- | Lift up a `'Java a'` as the `'JavaFX a'`
 liftJ :: Java a b -> JavaFX a b
-liftJ x = let j = rst $ \_ timer -> (, timer) <$> x
-          in JavaFX j
+liftJ x = JavaFX . ReaderT $ \_ -> x
+
+-- | Lift up an `IO` to `'JavaFX' a`
+liftJIO :: IO b -> JavaFX a b
+liftJIO = liftJ . io

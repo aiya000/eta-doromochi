@@ -1,5 +1,6 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE MagicHash #-}
+{-# LANGUAGE TupleSections #-}
 {-# LANGUAGE TypeFamilies #-}
 
 module Doromochi.DoromochiApp
@@ -7,8 +8,9 @@ module Doromochi.DoromochiApp
   , start
   ) where
 
-import Doromochi.View.DoromochiPane (newDoromochiPane)
+import Data.IORef (newIORef)
 import Doromochi.Types
+import Doromochi.View.DoromochiPane (newDoromochiPane)
 import Java
 import JavaFX
 
@@ -28,8 +30,8 @@ start :: Stage -> Java DoromochiApp ()
 start stage = do
   stage <.> setTitle "ドロもち"
   --TODO: Create a pane or a window to make pomodoro prefs, Don't use `def :: PomodoroTimer`, Read prefs from the config
-  timer <- newDefaultTimer
-  doromochiPane <- withThis $ flip (evalJavaFX newDoromochiPane) timer . AppCore stage . superCast
+  timerRef <- newDefaultTimer >>= io . newIORef
+  doromochiPane <- withThis $ runJavaFX newDoromochiPane . (,timerRef) . AppRoot stage . superCast
   scene <- newScene doromochiPane 256 256
   stage <.> do
     setTitle "ドロもち"

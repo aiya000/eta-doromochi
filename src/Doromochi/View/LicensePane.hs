@@ -2,7 +2,7 @@
 module Doromochi.View.LicensePane where
 
 import Control.Monad.Reader (ask)
-import Doromochi.Types (JavaFX, liftJ, AppCore(..))
+import Doromochi.Types (JavaFX, liftJ, AppRoot(..))
 import Java
 import JavaFX
 
@@ -55,5 +55,5 @@ newLicensePane = do
     --TODO: OpenJDK8 + OpenJFX on my ArchLinux occures 'java.lang.ClassNotFoundException: com.sun.deploy.uitoolkit.impl.fx.HostServicesFactory', please see https://bugs.openjdk.java.net/browse/JDK-8160464
     makeOpenURL :: String -> JavaFX a (ActionEvent -> Java (EventHandler ActionEvent) ())
     makeOpenURL urlLike = do
-      AppCore _ app <- ask
+      AppRoot _ app <- fst <$> ask
       return $ \_ -> app <.> getHostServices >- showDocument urlLike
