@@ -25,13 +25,15 @@ module Doromochi.Types
   , runRST
   , JavaFX (..)
   , runJavaFX
+  , evalJavaFX
+  , execJavaFX
   , liftJ
   ) where
 
 import Control.Concurrent.Suspend (sDelay)
 import Control.Concurrent.Timer (TimerIO, newTimer, repeatedStart)
 import Control.Monad (void)
-import Control.Monad.RWS.Strict (RWST(..), evalRWST)
+import Control.Monad.RWS.Strict (RWST(..))
 import Control.Monad.Reader (MonadReader)
 import Control.Monad.State.Strict (MonadState(..))
 import Data.Default (Default(..))
@@ -305,10 +307,18 @@ newtype JavaFX a b = JavaFX
              )
 
 -- | Extract `'JavaFX' a`
-runJavaFX :: JavaFX a b -> AppCore -> PomodoroTimer -> Java a b
+runJavaFX :: JavaFX a b -> AppCore -> PomodoroTimer -> Java a (b, PomodoroTimer)
 runJavaFX context r s = do
-  (x, _) <- evalRWST (unJavaFX context) r s
-  return x
+  (x, s', _) <- runRWST (unJavaFX context) r s
+  return (x, s')
+
+-- | Similar to 'runJavaFX' but without the result of the state
+evalJavaFX :: JavaFX a b -> AppCore -> PomodoroTimer -> Java a b
+evalJavaFX context r s = fst <$> runJavaFX context r s
+
+-- | Similar to 'runJavaFX' but without the primary result
+execJavaFX :: JavaFX a b -> AppCore -> PomodoroTimer -> Java a PomodoroTimer
+execJavaFX context r s = snd <$> runJavaFX context r s
 
 -- | Lift up a `'Java a'` as the `'JavaFX a'`
 liftJ :: Java a b -> JavaFX a b

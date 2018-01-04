@@ -5,7 +5,7 @@ module Doromochi.View.DoromochiPane
 
 import Control.Monad.Reader (asks)
 import Control.Monad.State.Strict (get)
-import Doromochi.Types (runJavaFX, JavaFX, liftJ, AppCore(..), newDefaultTimer, startClock)
+import Doromochi.Types
 import Doromochi.View.LicensePane (newLicensePane)
 import Doromochi.View.PomodoroPane (newPomodoroPane)
 import Java
@@ -70,7 +70,7 @@ makeMenuBar = do
       return $ \_ -> do
         stage <- newStage
         emptyTimer <- newDefaultTimer
-        licensePane <- flip (runJavaFX newLicensePane) emptyTimer $ AppCore stage app
+        licensePane <- flip (evalJavaFX newLicensePane) emptyTimer $ AppCore stage app
         scene <- newSceneWithoutSize licensePane
         stage <.> setScene scene
         stage <.> showStage
