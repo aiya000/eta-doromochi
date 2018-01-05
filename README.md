@@ -32,13 +32,29 @@ $ doromochi
 
 
 # :clipboard: About the guide line and the copyright :clipboard:
+## Images
 [This app's images](https://github.com/aiya000/eta-doromochi/blob/master/images) is in the
 [（ず・ω・きょ）](http://zunko.jp/guideline.html ).
 
-![（ず・ω・きょ）](http://zunko.jp/sozai/FAQ/zunkyo_m.png)
-
-Also [\@HassakuTb](https://twitter.com/HassakuTb) has the copyright of the images.
+And [\@HassakuTb](https://twitter.com/HassakuTb) has the copyright of the images.
 
 ![zunko](https://github.com/aiya000/eta-doromochi/blob/master/images/work_finishes.png)
 
-Also the whole of this software includes the work that is distributed in the Apache License 2.0 + ずんきょ.
+Please see [here](https://github.com/aiya000/eta-doromochi/blob/master/images/LICENSE.md)
+for more information.
+
+此度は僕が「アプリ作るからずんちゃんの絵を描いてくれ！！」と叫んだときに反応してくれて、
+こんなにも可愛いずんちゃんを提供してたことを感謝します [\@HassakuTb](https://twitter.com/HassakuTb) :bow:
+
+## Sounds
+[フリー効果音 On-Jin ～音人～](https://on-jin.com/) has the copyright of
+[the sound library](https://github.com/aiya000/eta-doromochi/blob/master/sounds)
+
+- [フリー効果音 On-Jin ～音人～ 利用規約](https://on-jin.com/kiyaku.php)
+- [フリー効果音 On-Jin ～音人～](https://on-jin.com/)
+
+Please see [here](https://github.com/aiya000/eta-doromochi/blob/master/sounds/LICENSE.md)
+for more information.
+
+## Whole
+Also the whole of this software includes the work that is distributed in the Apache License 2.0
