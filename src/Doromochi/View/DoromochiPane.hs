@@ -4,7 +4,6 @@ module Doromochi.View.DoromochiPane
   ) where
 
 import Control.Monad.Reader (ask, asks)
-import Data.IORef (newIORef)
 import Doromochi.Types
 import Doromochi.View.LicensePane (newLicensePane)
 import Doromochi.View.PomodoroPane (newPomodoroPane)
@@ -78,10 +77,10 @@ makeLibraryMenu = do
     makeOpenLisenceWindow = do
       app <- asks $ fxApp . fst
       return $ \_ -> do
-        stage <- newStage
-        emptyTimerRef <- newDefaultTimer >>= io . newIORef
-        licensePane <- runJavaFX newLicensePane (AppRoot stage app, emptyTimerRef)
-        scene <- newSceneWithoutSize licensePane
+        stage       <- newStage
+        emptyTimer  <- newDefaultTimer
+        licensePane <- runJavaFX newLicensePane (AppRoot stage app, emptyTimer)
+        scene       <- newSceneWithoutSize licensePane
         stage <.> setScene scene
         stage <.> showStage
 

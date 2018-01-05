@@ -13,14 +13,14 @@ type PreferencesPane = FlowPane
 
 --TODO: Use a `'SpinnerValueFactory' 'Seconds'` instead of `'SpinnerValueFactory' Int`
 -- | Make a 'PreferencesPane' to update the 'PomodoroIntervals' in given `'IORef' 'PomodoroTimer'`
-newPreferencesPane :: IORef PomodoroTimer -> Java a FlowPane
-newPreferencesPane timerRef = do
-  prefs <- io $ intervalPrefs <$> readIORef timerRef
+newPreferencesPane :: PomodoroTimer -> Java a FlowPane
+newPreferencesPane (PomodoroTimer prefsRef _ _) = do
+  prefs <- io $ readIORef prefsRef
   (timeOnTaskSpinner, timeOnTaskPane)             <- makePaneATime "仕事時間: " $ timeOnTask prefs
   (timeOnShortRestSpinner, timeOnShortRestPane)   <- makePaneATime "休憩: "     $ timeOnShortRest prefs
   (lengthToLongRestSpinner, lengthToLongRestPane) <- makePaneLengthToLongRest   $ lengthToLongRest prefs
   (timeOnLongRestSpinner, timeOnLongRestPane)     <- makePaneATime "超休憩: "   $ timeOnLongRest prefs
-  applyButton <- makeApplyButton timerRef
+  applyButton <- makeApplyButton prefsRef
                                  timeOnTaskSpinner
                                  timeOnShortRestSpinner
                                  lengthToLongRestSpinner
@@ -71,21 +71,19 @@ makePaneLengthToLongRest current = do
 -- That button aggregates the final values of 'Spinner's,
 -- Replace the value of given `'IORef' 'PomodoroTimer'` with the aggregated result,
 -- and Reset 'pomodoroClock' to 1
-makeApplyButton :: IORef PomodoroTimer -> Spinner Int -> Spinner Int -> Spinner Int -> Spinner Int -> Java a Button
-makeApplyButton timerRef timeOnTaskSpinner timeOnShortRestSpinner lengthToLongRestSpinner timeOnLongRestSpinner = do
+makeApplyButton :: IORef PomodoroIntervals -> Spinner Int -> Spinner Int -> Spinner Int -> Spinner Int -> Java a Button
+makeApplyButton prefsRef timeOnTaskSpinner timeOnShortRestSpinner lengthToLongRestSpinner timeOnLongRestSpinner = do
   self <- newButton "設定"
   let replace = \_ -> do
         timeOnTask'       <- Seconds <$> timeOnTaskSpinner <.> getSpinnerValue
         timeOnShortRest'  <- Seconds <$> timeOnShortRestSpinner <.> getSpinnerValue
         lengthToLongRest' <- lengthToLongRestSpinner <.> getSpinnerValue
         timeOnLongRest'   <- Seconds <$> timeOnLongRestSpinner <.> getSpinnerValue
-        io . modifyIORef timerRef $ \timer -> timer
-          { intervalPrefs = PomodoroIntervals
-            { timeOnTask       = timeOnTask'
-            , timeOnShortRest  = timeOnShortRest'
-            , lengthToLongRest = lengthToLongRest'
-            , timeOnLongRest   = timeOnLongRest'
-            }
+        io . modifyIORef prefsRef $ \x -> x
+          { timeOnTask       = timeOnTask'
+          , timeOnShortRest  = timeOnShortRest'
+          , lengthToLongRest = lengthToLongRest'
+          , timeOnLongRest   = timeOnLongRest'
           }
   self <.> setOnButtonAction replace
   return self

@@ -29,20 +29,14 @@ module Doromochi.Types
 
 import Control.Concurrent.Suspend (sDelay)
 import Control.Concurrent.Timer (TimerIO, newTimer, repeatedStart)
-import Control.Lens (Lens', lens, (%~))
-import Control.Monad (void, when)
+import Control.Monad (when)
 import Control.Monad.Reader (MonadReader, ReaderT(..))
 import Data.Default (Default(..))
-import Data.IORef (IORef, modifyIORef, readIORef)
+import Data.IORef (IORef, modifyIORef, newIORef)
 import Doromochi.FilePath (zunkoOnTaskFirstHalf, zunkoOnTaskLastHalf, zunkoOnShortRest, zunkoOnLongRest)
 import Java
 import JavaFX
 import Text.Printf (printf)
-
---TODO: Remove these import
-import qualified System.IO.Unsafe as Debug
-import qualified Debug.Trace as Debug
---
 
 -- | A javafx application's resources
 data AppRoot = AppRoot
@@ -259,20 +253,14 @@ guidance (OnLongRest timeToNextWorking)
 
 -- | A state on between `'JavaFX` a' and `'Java' a`, measures the pomodoro times
 data PomodoroTimer = PomodoroTimer
-  { intervalPrefs :: PomodoroIntervals -- ^ Preferences of 'PomodoroIntervals'
-  , pomodoroClock :: Seconds -- ^ An unique clock on a `'JavaFX' a`, be counted up by 'tickTimer'
+  { intervalPrefs :: IORef PomodoroIntervals -- ^ Preferences of 'PomodoroIntervals'
+  , pomodoroClock :: IORef Seconds -- ^ An unique clock on a `'JavaFX' a`, be counted up by 'tickTimer'
   , tickTimer :: TimerIO -- ^ Increment 'pomodoroClock' on a second after 'startClock' is executed
   }
 
-_intervalPrefs :: Lens' PomodoroTimer PomodoroIntervals
-_intervalPrefs = lens intervalPrefs $ \x newer -> x {intervalPrefs = newer}
-
-_pomodoroClock :: Lens' PomodoroTimer Seconds
-_pomodoroClock = lens pomodoroClock $ \x newer -> x {pomodoroClock = newer}
-
 -- | A timer, that does nothing without 'startClock'
 newDefaultTimer :: Java a PomodoroTimer
-newDefaultTimer = PomodoroTimer def 1 <$> io newTimer
+newDefaultTimer = io $ PomodoroTimer <$> newIORef def <*> newIORef 1 <*> newTimer
 
 -- |
 -- Start a cycle of pomodoro technic with 'PomodoroTimer' of '`JavaFX` a'.
@@ -280,17 +268,17 @@ newDefaultTimer = PomodoroTimer def 1 <$> io newTimer
 -- This is in `'Java' a`
 -- because this is expected to be passed to a handler
 -- (e.g. 'setOnButtonAction').
-startClock :: IORef PomodoroTimer -> Java a ()
-startClock refs = io $ do
-  timer <- tickTimer <$> readIORef refs
-  let incrementClock = modifyIORef refs $ _pomodoroClock %~ (+1)
-  void $ repeatedStart timer incrementClock _1sec
+startClock :: PomodoroTimer -> Java a ()
+startClock (PomodoroTimer _ clockRef timerIO) = io $ do
+  let incrementClock = modifyIORef clockRef (+1)
+  succeed <- repeatedStart timerIO incrementClock _1sec
+  when (not succeed) $ error "startClock: fatal error ! (A `timerIO` couldn't be started)"
   where
     _1sec = sDelay 1
 
 
 -- | This is impure type because 'IORef a's are passed to `Java b`s and to be modified
-type AppEnv = (AppRoot, IORef PomodoroTimer)
+type AppEnv = (AppRoot, PomodoroTimer)
 
 --TODO: Use STM for `'IORef' 'PomodoroTimer'`
 -- | Store resources that depends the javafx application

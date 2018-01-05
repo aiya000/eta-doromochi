@@ -3,8 +3,8 @@ module Doromochi.View.PomodoroPane
   , newPomodoroPane
   ) where
 
-import Control.Monad.Reader (ask)
-import Data.IORef (IORef, readIORef)
+import Control.Monad.Reader (asks)
+import Data.IORef (readIORef)
 import Doromochi.Types
 import Java
 import Java.Doromochi (newFile, toURI, toURL)
@@ -22,7 +22,7 @@ type PomodoroPane = FlowPane
 -- | Make a 'PomodoroPane'
 newPomodoroPane :: JavaFX a PomodoroPane
 newPomodoroPane = do
-  timerRef <- snd <$> ask
+  timerRef <- asks $ snd
   liftJ $ do
     zunkoImage <- newImageViewOfEmpty
     guideLabel <- newLabel "" -- e.g. "次の休憩まであと15分（次の長休憩まであと80分）"
@@ -44,10 +44,11 @@ newPomodoroPane = do
       resetTimerButton <- newButton "Reset" --TODO: Implement the action
       newFlowPane horizontalOrient $ map superCast [stopTimerButton, resetTimerButton]
 
-    startWatcher :: IORef PomodoroTimer -> (ImageView , Label, Label) -> Java a ()
-    startWatcher timerRef (zunkoImage, guideLabel, timeLabel) = do
-      PomodoroTimer prefs now _ <- io $ readIORef timerRef
+    startWatcher :: PomodoroTimer -> (ImageView , Label, Label) -> Java a ()
+    startWatcher (PomodoroTimer prefsRef clockRef _) (zunkoImage, guideLabel, timeLabel) = do
       let watchClock _ = do
+            prefs <- io $ readIORef prefsRef
+            now   <- io $ readIORef clockRef
             timeLabel <.> setText ("Time " ++ show now)
             let currentStep = calcStep prefs now
             currentZunko <- newZunkoImageOfStep prefs currentStep
