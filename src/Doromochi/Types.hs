@@ -14,6 +14,8 @@ module Doromochi.Types
   , minutes
   , asMinutes
   , simpler
+  , oneBlockOf
+  , oneCycleOf
   , PomodoroStep (..)
   , calcStep
   , correspondZunko
@@ -120,6 +122,15 @@ asMinutes :: Seconds -> Int
 asMinutes = (`div` 60) . unSeconds
 
 
+-- | A time of a short cycle ('timeOnTask' + 'timeOnShortRest')
+oneBlockOf :: PomodoroIntervals -> Seconds
+oneBlockOf (PomodoroIntervals {..}) = timeOnTask + timeOnShortRest
+
+-- | A time of a long cycle ('oneBlockOf' it * 'lengthToLongRest' + 'timeOnLongRest')
+oneCycleOf :: PomodoroIntervals -> Seconds
+oneCycleOf prefs@(PomodoroIntervals {..}) = oneBlockOf prefs .* lengthToLongRest + timeOnLongRest
+
+
 --NOTE: Can haddock generate ?
 -- | A step of the pomodoro technic with appendix states
 data PomodoroStep =
@@ -156,14 +167,6 @@ calcStep prefs sec
   | otherwise -- Usually, this is not passed through
     = error $ "calcStep: fatal error ! (" ++ show prefs ++ ", " ++ show sec ++ ")"
   where
-    -- | A time of a short cycle ('timeOnTask' + 'timeOnShortRest')
-    oneBlockOf :: PomodoroIntervals -> Seconds
-    oneBlockOf (PomodoroIntervals {..}) = timeOnTask + timeOnShortRest
-
-    -- | A time of a long cycle ('oneBlockOf' it * 'lengthToLongRest' + 'timeOnLongRest')
-    oneCycleOf :: PomodoroIntervals -> Seconds
-    oneCycleOf prefs@(PomodoroIntervals {..}) = oneBlockOf prefs .* lengthToLongRest + timeOnLongRest
-
     -- Remove times of any cycle from a 'Seconds'
     -- (Extract a time, it is after the current cycle starts)
     currentSec :: Seconds -> PomodoroIntervals -> Seconds
