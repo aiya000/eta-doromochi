@@ -22,3 +22,14 @@ zunkoOnShortRest = "work_finishes.png"
 
 zunkoOnLongRest :: FilePath
 zunkoOnLongRest = "rest_time.png"
+
+
+-- | A file path to a sound, please see 'startClock'
+seLongRestFinishes :: FilePath
+seLongRestFinishes = "long_rest_is_finished.mp3"
+
+seShortRestFinishes :: FilePath
+seShortRestFinishes = "short_rest_is_finished.mp3"
+
+seTaskFinishes :: FilePath
+seTaskFinishes = "task_is_finished.mp3"
