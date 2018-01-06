@@ -254,8 +254,8 @@ guidance (OnLongRest timeToNextWorking)
 -- | A state on between `'JavaFX` a' and `'Java' a`, measures the pomodoro times
 data PomodoroTimer = PomodoroTimer
   { intervalPrefs :: IORef PomodoroIntervals -- ^ Preferences of 'PomodoroIntervals'
-  , pomodoroClock :: IORef Seconds -- ^ An unique clock on a `'JavaFX' a`, be counted up by 'tickTimer'
-  , tickTimer :: TimerIO -- ^ Increment 'pomodoroClock' on a second after 'startClock' is executed
+  , clockRef :: IORef Seconds -- ^ An unique clock on a `'JavaFX' a`, be counted up by 'clockTimer'
+  , clockTimer :: TimerIO -- ^ By 'startClock', be set an action to increment 'pomodoroClock' a seconds
   }
 
 -- | A timer, that does nothing without 'startClock'
@@ -263,10 +263,9 @@ newDefaultTimer :: Java a PomodoroTimer
 newDefaultTimer = io $ PomodoroTimer <$> newIORef def <*> newIORef 1 <*> newTimer
 
 -- |
--- Start a cycle of pomodoro technic with 'PomodoroTimer' of '`JavaFX` a'.
+-- Start a cycle of pomodoro technic.
 --
--- This is in `'Java' a`
--- because this is expected to be passed to a handler
+-- The reason why this is X, because this is expected to be passed to a handler
 -- (e.g. 'setOnButtonAction').
 startClock :: PomodoroTimer -> Java a ()
 startClock (PomodoroTimer _ clockRef timerIO) = io $ do
