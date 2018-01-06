@@ -8,7 +8,6 @@ module Doromochi.DoromochiApp
   , start
   ) where
 
-import Data.IORef (newIORef)
 import Doromochi.Types
 import Doromochi.View.DoromochiPane (newDoromochiPane)
 import Java
