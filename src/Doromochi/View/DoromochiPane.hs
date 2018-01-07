@@ -95,9 +95,9 @@ makePrefsMenu = do
   where
     makeOpenPrefsWindow :: JavaFX a (ActionEvent -> Java (EventHandler ActionEvent) ())
     makeOpenPrefsWindow = do
-      timerRef <- snd <$> ask
+      timer <- snd <$> ask
       return $ \_ -> do
-        prefsScene <- newPreferencesPane timerRef >>= newSceneWithoutSize
         stage <- newStage
+        prefsScene <- newPreferencesPane stage timer >>= newSceneWithoutSize
         stage <.> setScene prefsScene
         stage <.> showStageAndWait

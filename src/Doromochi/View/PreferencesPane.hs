@@ -16,18 +16,18 @@ type PreferencesPane = FlowPane
 
 --TODO: Use a `'SpinnerValueFactory' 'Seconds'` instead of `'SpinnerValueFactory' JInteger`
 -- | Make a 'PreferencesPane' to update the 'PomodoroIntervals' in given `'IORef' 'PomodoroTimer'`
-newPreferencesPane :: PomodoroTimer -> Java a FlowPane
-newPreferencesPane (PomodoroTimer prefsRef _ _) = do
+newPreferencesPane :: Stage -> PomodoroTimer -> Java a FlowPane
+newPreferencesPane thisStage (PomodoroTimer prefsRef _ _) = do
   prefs <- io $ readIORef prefsRef
   (timeOnTaskSpinner, timeOnTaskPane)             <- makePaneATime "仕事時間: " $ timeOnTask prefs
   (timeOnShortRestSpinner, timeOnShortRestPane)   <- makePaneATime "休憩: "     $ timeOnShortRest prefs
   (lengthToLongRestSpinner, lengthToLongRestPane) <- makePaneLengthToLongRest   $ lengthToLongRest prefs
   (timeOnLongRestSpinner, timeOnLongRestPane)     <- makePaneATime "超休憩: "   $ timeOnLongRest prefs
-  applyButton <- makeApplyButton prefsRef ( timeOnTaskSpinner
-                                          , timeOnShortRestSpinner
-                                          , lengthToLongRestSpinner
-                                          , timeOnLongRestSpinner
-                                          )
+  applyButton <- makeApplyButton thisStage prefsRef ( timeOnTaskSpinner
+                                                    , timeOnShortRestSpinner
+                                                    , lengthToLongRestSpinner
+                                                    , timeOnLongRestSpinner
+                                                    )
   noticeLabel <- newLabel "注意: 「保存」ボタンを押すと、現在進行中のタイマーがリセットされます。ポモドーロ実施中の場合はご注意ください。"
   newFlowPane verticalOrient [ superCast timeOnTaskPane
                              , superCast timeOnShortRestPane
@@ -74,10 +74,10 @@ makePaneLengthToLongRest current = do
 -- That button aggregates the final values of 'Spinner's,
 -- Replace the value of given `'IORef' 'PomodoroTimer'` with the aggregated result,
 -- and Reset 'pomodoroClock' to 1
-makeApplyButton :: IORef PomodoroIntervals -> (Spinner JInteger, Spinner JInteger, Spinner JInteger, Spinner JInteger) -> Java a Button
-makeApplyButton prefsRef spinners = do
+makeApplyButton :: Stage -> IORef PomodoroIntervals -> (Spinner JInteger, Spinner JInteger, Spinner JInteger, Spinner JInteger) -> Java a Button
+makeApplyButton thisStage prefsRef spinners = do
   self <- newButton "保存"
-  self <.> setOnButtonAction (hotloadPrefs prefsRef spinners .>. savePrefs spinners)
+  self <.> setOnButtonAction (hotloadPrefs prefsRef spinners .>. savePrefs spinners .>. closeWindow thisStage)
   return self
   where
     aggregatePrefs :: (Spinner JInteger, Spinner JInteger, Spinner JInteger, Spinner JInteger) -> Java a PomodoroIntervals
@@ -108,3 +108,6 @@ makeApplyButton prefsRef spinners = do
         print newPrefs
         configPath <- (++ configOfIntervals) . (++ "/.config/doromochi/") <$> getEnv "HOME"
         writeFile configPath $ show newPrefs
+
+    closeWindow :: Stage -> (ActionEvent -> Java (EventHandler ActionEvent) ())
+    closeWindow thisStage = \_ -> thisStage <.> closeStage

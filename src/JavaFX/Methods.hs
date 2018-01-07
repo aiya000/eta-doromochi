@@ -94,6 +94,9 @@ foreign import java unsafe "show" showStage ::
 foreign import java unsafe "showAndWait" showStageAndWait ::
   Java Stage ()
 
+foreign import java unsafe "close" closeStage ::
+  Java Stage ()
+
 foreign import java unsafe "setTitle" setTitle ::
   String -> Java Stage ()
 
