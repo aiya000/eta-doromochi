@@ -4,4 +4,4 @@ if [[ ! -d $HOME/.config/doromochi ]] ; then
 fi
 
 echo 'copying resources, please wait...'
-cp -r images sounds ~/.config/doromochi && etlas install
+cp -r resources/* ~/.config/doromochi && etlas install
