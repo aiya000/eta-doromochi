@@ -283,8 +283,7 @@ foreign import java unsafe "@new" newSpinner ::
      Int -- ^ min value
   -> Int -- ^ max value
   -> Int -- ^ initial value
-  -> Java a (Spinner Int)
+  -> Java a (Spinner JInteger)
 
---FIXME: Generalize to Java (Spinner a) a (now, this is impeded 'eta: panic!' on Eta 0.0.9b3)
 foreign import java unsafe "getValue" getSpinnerValue ::
-  Java (Spinner Int) Int
+  Extends a Object => Java (Spinner a) a
