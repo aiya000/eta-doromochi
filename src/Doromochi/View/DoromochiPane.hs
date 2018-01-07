@@ -3,6 +3,7 @@ module Doromochi.View.DoromochiPane
   , newDoromochiPane
   ) where
 
+import Control.Monad.Doromochi ((.>.))
 import Control.Monad.Reader (ask, asks)
 import Doromochi.Types
 import Doromochi.View.LicensePane (newLicensePane)
@@ -45,9 +46,6 @@ newDoromochiPane = do
     makeStartClockEvent = do
       timerRef <- snd <$> ask
       return $ \_ -> startClock timerRef
-
-    (.>.) :: Monad m => (a -> m b) -> (a -> m c) -> a -> m c
-    (.>.) f g x = f x >> g x
 
 
 -- | Make a menu bar for 'DoromochiPane'
