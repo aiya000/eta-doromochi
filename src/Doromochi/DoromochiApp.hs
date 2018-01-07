@@ -8,6 +8,7 @@ module Doromochi.DoromochiApp
   , start
   ) where
 
+import Doromochi.FilePath (configOfIntervals)
 import Doromochi.Types
 import Doromochi.View.DoromochiPane (newDoromochiPane)
 import Java
@@ -28,11 +29,17 @@ foreign export java "start" start ::
 start :: Stage -> Java DoromochiApp ()
 start stage = do
   stage <.> setTitle "ドロもち"
-  --TODO: Create a pane or a window to make pomodoro prefs, Don't use `def :: PomodoroTimer`, Read prefs from the config
-  timer <- newDefaultTimer
+  timer <- readDefaultTimer >>= newDefaultTimerIfAbsent
   doromochiPane <- withThis $ runJavaFX newDoromochiPane . (,timer) . AppRoot stage . superCast
   scene <- newScene doromochiPane 256 256
   stage <.> do
     setTitle "ドロもち"
     setScene scene
     showStage
+  where
+    newDefaultTimerIfAbsent :: Maybe PomodoroTimer -> Java a PomodoroTimer
+    newDefaultTimerIfAbsent (Just x) = return x
+    newDefaultTimerIfAbsent Nothing = do
+      --TODO: Show `Alert` instead of 'putStrLn'
+      io . putStrLn $ configOfIntervals ++ " couldn't found, the default config is used instead"
+      newDefaultTimer

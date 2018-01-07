@@ -22,6 +22,7 @@ module Doromochi.Types
   , guidance
   , PomodoroTimer (..)
   , newDefaultTimer
+  , readDefaultTimer
   , startClock
   , JavaFX (..)
   , runJavaFX
@@ -35,9 +36,12 @@ import Control.Monad (when)
 import Control.Monad.Reader (MonadReader, ReaderT(..))
 import Data.Default (Default(..))
 import Data.IORef (IORef, modifyIORef, newIORef)
-import Doromochi.FilePath (zunkoOnTaskFirstHalf, zunkoOnTaskLastHalf, zunkoOnShortRest, zunkoOnLongRest)
+import Data.Traversable (forM)
+import Doromochi.FilePath
 import Java
 import JavaFX
+import Safe (readMay)
+import System.Environment (getEnv)
 import Text.Printf (printf)
 
 -- | A javafx application's resources
@@ -52,7 +56,7 @@ data PomodoroIntervals = PomodoroIntervals
   , timeOnShortRest :: Seconds -- ^ A rest time
   , lengthToLongRest :: Int
   , timeOnLongRest :: Seconds -- ^ A long rest time, this rest time comes after the cycle between 'timeOnTask' and 'timeOnShortRest' at 'lengthToLongRest' th is end
-  } deriving (Show)
+  } deriving (Show, Read)
 
 instance Default PomodoroIntervals where
   def = PomodoroIntervals { timeOnTask = minutes 25
@@ -89,6 +93,20 @@ s .* x = s * Seconds x
 instance Show Seconds where
   show x = let (h, m, Seconds s') = simpler x
            in printf "%02d:%02d:%02d" h m s'
+
+instance Read Seconds where
+  readsPrec _ = \token ->
+    let ((h, rest)   : _) = lex token
+        ((m, rest')  : _) = lex $ tail rest
+        ((s, rest'') : _) = lex $ tail rest'
+        maybeHour   = readMay h
+        maybeMinute = readMay m
+        maybeSecond = readMay s
+    in calc maybeHour maybeMinute maybeSecond rest''
+      where
+        calc :: Maybe Int -> Maybe Int -> Maybe Int -> String -> [(Seconds, String)]
+        calc (Just h) (Just m) (Just s) rest = [(Seconds $ (h * 60 * 60) + (m * 60) + s, rest)]
+        calc _ _ _ _ = []
 
 -- | To the format of (hours, minutes, seconds)
 simpler :: Seconds -> (Int, Int, Seconds)
@@ -261,9 +279,25 @@ data PomodoroTimer = PomodoroTimer
   , clockTimer :: TimerIO -- ^ By 'startClock', be set an action to increment 'pomodoroClock' a seconds
   }
 
--- | A timer, that does nothing without 'startClock'
+-- |
+-- A timer, that does nothing without 'startClock'.
+--
+-- This doesn't load the user configuration of 'PomodoroIntervals'.
+-- Please use 'readDefaultTimer' instead if you want to load it.
 newDefaultTimer :: Java a PomodoroTimer
 newDefaultTimer = io $ PomodoroTimer <$> newIORef def <*> newIORef 1 <*> newTimer
+
+-- |
+-- Similar to 'newDefaultTimer' but only 'intervalPrefs' is loaded from the config file.
+--
+-- And if the user config cannot be found, or the user config is invalid format, return `Nothing`.
+readDefaultTimer :: Java a (Maybe PomodoroTimer)
+readDefaultTimer = do
+  x <- newDefaultTimer
+  maybeConfig <- io $ return . readMay =<< readFile =<< (++ configOfIntervals) . (++ "/.config/doromochi/") <$> getEnv "HOME"
+  io . forM maybeConfig $ \config -> do
+    configRef <- newIORef config
+    return x { intervalPrefs = configRef }
 
 -- |
 -- Start a cycle of pomodoro technic.

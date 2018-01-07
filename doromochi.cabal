@@ -18,6 +18,7 @@ library
                      , data-default
                      , lens
                      , mtl
+                     , safe
                      , safe-exceptions
                      , suspend
                      , timers
