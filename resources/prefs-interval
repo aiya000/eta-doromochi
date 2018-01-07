@@ -1,0 +1,6 @@
+PomodoroIntervals
+    { timeOnTask = 00:25:00
+    , timeOnShortRest = 00:05:00
+    , lengthToLongRest = 3
+    , timeOnLongRest = 00:30:00
+    }
