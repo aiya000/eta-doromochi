@@ -25,7 +25,7 @@ newPreferencesPane (PomodoroTimer prefsRef _ _) = do
                                  timeOnShortRestSpinner
                                  lengthToLongRestSpinner
                                  timeOnLongRestSpinner
-  noticeLabel <- newLabel "注意: 「設定」ボタンを押すと、現在進行中のタイマーがリセットされます。ポモドーロ実施中の場合はご注意ください。"
+  noticeLabel <- newLabel "注意: 「保存」ボタンを押すと、現在進行中のタイマーがリセットされます。ポモドーロ実施中の場合はご注意ください。"
   newFlowPane verticalOrient [ superCast timeOnTaskPane
                              , superCast timeOnShortRestPane
                              , superCast lengthToLongRestPane
@@ -73,7 +73,7 @@ makePaneLengthToLongRest current = do
 -- and Reset 'pomodoroClock' to 1
 makeApplyButton :: IORef PomodoroIntervals -> Spinner Int -> Spinner Int -> Spinner Int -> Spinner Int -> Java a Button
 makeApplyButton prefsRef timeOnTaskSpinner timeOnShortRestSpinner lengthToLongRestSpinner timeOnLongRestSpinner = do
-  self <- newButton "設定"
+  self <- newButton "保存"
   let replace = \_ -> do
         timeOnTask'       <- Seconds <$> timeOnTaskSpinner <.> getSpinnerValue
         timeOnShortRest'  <- Seconds <$> timeOnShortRestSpinner <.> getSpinnerValue
