@@ -38,7 +38,7 @@ $ doromochi
 
 And [\@HassakuTb](https://twitter.com/HassakuTb) has the copyright of the images.
 
-![zunko](https://github.com/aiya000/eta-doromochi/blob/master/images/work_finishes.png)
+![zunko](https://github.com/aiya000/eta-doromochi/blob/master/resources/images/work_finishes.png)
 
 Please see [here](https://github.com/aiya000/eta-doromochi/blob/master/images/LICENSE.md)
 for more information.
