@@ -1,5 +1,7 @@
 # doromochi
-TODO
+An experience of :moon: **Haskell (Eta)** X **JavaFX** :moon: (Haskell GUI Programming)
+
+A timer app for pomodoro tecknic :clock12:
 
 
 # :gift: How to install :gift:
